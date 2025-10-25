@@ -4,9 +4,6 @@ services:
     container_name: acselerator-db
     ports:
       - "5555:5432"
-    volumes:
-      - c:\tmp\acselerator\data:/var/lib/postgresql/data
-      - c:\tmp\acselerator\sql:/docker-entrypoint-initdb.d
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
