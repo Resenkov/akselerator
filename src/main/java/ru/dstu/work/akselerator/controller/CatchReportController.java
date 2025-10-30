@@ -8,9 +8,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.CatchReportDto;
+import ru.dstu.work.akselerator.dto.CreateCatchResult;
 import ru.dstu.work.akselerator.mapper.CatchReportMapper;
 import ru.dstu.work.akselerator.service.CatchReportService;
 import ru.dstu.work.akselerator.entity.CatchReport;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/catch-reports")
@@ -21,6 +25,15 @@ public class CatchReportController {
     @Autowired
     public CatchReportController(CatchReportService service) {
         this.service = service;
+    }
+
+    @PostMapping
+    public ResponseEntity<?> create(@Validated @RequestBody CatchReportDto dto) {
+        CreateCatchResult result = service.createCatch(dto);
+        Map<String,Object> body = new HashMap<>();
+        body.put("report", CatchReportMapper.toDto(result.getReport()));
+        body.put("warning", result.getWarning());
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 
     @GetMapping
@@ -38,12 +51,6 @@ public class CatchReportController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<CatchReportDto> create(@Validated @RequestBody CatchReportDto dto) {
-        CatchReport entity = CatchReportMapper.toEntity(dto);
-        CatchReport saved = service.create(entity);
-        return ResponseEntity.status(HttpStatus.CREATED).body(CatchReportMapper.toDto(saved));
-    }
 
     @PutMapping("/" + "{" + "id" + "}")
     public ResponseEntity<CatchReportDto> update(@PathVariable Long id, @Validated @RequestBody CatchReportDto dto) {
