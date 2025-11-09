@@ -30,7 +30,7 @@ public class AllocationQuotaController {
         return ResponseEntity.ok(dtoPage);
     }
 
-    @GetMapping("/" + "{" + "id" + "}")
+    @GetMapping("/{id}")
     public ResponseEntity<AllocationQuotaDto> get(@PathVariable Long id) {
         return service.getById(id)
                 .map(AllocationQuotaMapper::toDto)
@@ -45,22 +45,17 @@ public class AllocationQuotaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(AllocationQuotaMapper.toDto(saved));
     }
 
-    @PutMapping("/" + "{" + "id" + "}")
+    @PutMapping("/{id}")
     public ResponseEntity<AllocationQuotaDto> update(@PathVariable Long id, @Validated @RequestBody AllocationQuotaDto dto) {
         AllocationQuota entity = AllocationQuotaMapper.toEntity(dto);
-        try {
-            entity.getClass().getMethod("setId", Long.class).invoke(entity, id);
-        } catch (Exception e) {
-            // ignore - service may handle id mapping
-        }
+        entity.setId(id);
         AllocationQuota updated = service.update(entity);
         return ResponseEntity.ok(AllocationQuotaMapper.toDto(updated));
     }
 
-    @DeleteMapping("/" + "{" + "id" + "}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
 }

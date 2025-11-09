@@ -1,11 +1,16 @@
 package ru.dstu.work.akselerator.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 
 /**
  * Информация о предупреждении по квоте, возвращаемая при создании отчёта об улове.
  */
+@Setter
+@Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WarningInfo {
 
@@ -45,51 +50,4 @@ public class WarningInfo {
 
     // getters / setters
 
-    public String getLevel() {
-        return level;
-    }
-
-    public void setLevel(String level) {
-        this.level = level;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public BigDecimal getQuotaLimitKg() {
-        return quotaLimitKg;
-    }
-
-    public void setQuotaLimitKg(BigDecimal quotaLimitKg) {
-        this.quotaLimitKg = quotaLimitKg;
-    }
-
-    public BigDecimal getUsedKg() {
-        return usedKg;
-    }
-
-    public void setUsedKg(BigDecimal usedKg) {
-        this.usedKg = usedKg;
-    }
-
-    public BigDecimal getRemainingKg() {
-        return remainingKg;
-    }
-
-    public void setRemainingKg(BigDecimal remainingKg) {
-        this.remainingKg = remainingKg;
-    }
-
-    public BigDecimal getPercentUsed() {
-        return percentUsed;
-    }
-
-    public void setPercentUsed(BigDecimal percentUsed) {
-        this.percentUsed = percentUsed;
-    }
 }
