@@ -14,6 +14,7 @@ import ru.dstu.work.akselerator.mapper.CatchReportMapper;
 import ru.dstu.work.akselerator.repository.AllocationQuotaRepository;
 import ru.dstu.work.akselerator.repository.CatchReportRepository;
 import ru.dstu.work.akselerator.service.CatchReportService;
+import java.math.RoundingMode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -119,7 +120,8 @@ public class CatchReportServiceImpl implements CatchReportService {
             BigDecimal limit = quota.getLimitKg();
             BigDecimal usedAfter = usedBefore.add(entity.getWeightKg());
             BigDecimal remaining = limit.subtract(usedAfter);
-            BigDecimal percent = usedAfter.multiply(BigDecimal.valueOf(100)).divide(limit, 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal percent = usedAfter.multiply(BigDecimal.valueOf(100))
+                    .divide(limit, 2, RoundingMode.HALF_UP);
 
             if (usedAfter.compareTo(limit) >= 0) {
                 warning = new WarningInfo("ERROR", "Квота превышена", limit, usedAfter, remaining, percent);

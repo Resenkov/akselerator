@@ -45,13 +45,10 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toDto(saved));
     }
 
-    @PutMapping("/" + "{" + "id" + "}")
+    @PutMapping("/{id}")
     public ResponseEntity<UserDto> update(@PathVariable Long id, @Validated @RequestBody UserDto dto) {
         User entity = UserMapper.toEntity(dto);
-        try {
-            entity.getClass().getMethod("setId", Long.class).invoke(entity, id);
-        } catch (Exception e) {
-        }
+        entity.setId(id);
         User updated = service.update(entity);
         return ResponseEntity.ok(UserMapper.toDto(updated));
     }

@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -33,4 +34,12 @@ public interface AllocationQuotaRepository extends JpaRepository<AllocationQuota
                                                 @Param("regionId") Long regionId,
                                                 @Param("date") LocalDate date);
 
+    @Query("SELECT COALESCE(SUM(a.limitKg), 0) FROM AllocationQuota a " +
+            "WHERE a.region.id = :regionId " +
+            "AND NOT (a.periodEnd < :periodStart OR a.periodStart > :periodEnd) " +
+            "AND (:excludeId IS NULL OR a.id <> :excludeId)")
+    BigDecimal sumLimitKgByRegionOverlappingPeriod(@Param("regionId") Long regionId,
+                                                   @Param("periodStart") LocalDate periodStart,
+                                                   @Param("periodEnd") LocalDate periodEnd,
+                                                   @Param("excludeId") Long excludeId);
 }

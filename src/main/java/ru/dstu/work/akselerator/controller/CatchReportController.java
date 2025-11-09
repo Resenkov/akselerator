@@ -52,14 +52,10 @@ public class CatchReportController {
     }
 
 
-    @PutMapping("/" + "{" + "id" + "}")
+    @PutMapping("/{id}")
     public ResponseEntity<CatchReportDto> update(@PathVariable Long id, @Validated @RequestBody CatchReportDto dto) {
         CatchReport entity = CatchReportMapper.toEntity(dto);
-        try {
-            entity.getClass().getMethod("setId", Long.class).invoke(entity, id);
-        } catch (Exception e) {
-            // ignore - service may handle id mapping
-        }
+        entity.setId(id);
         CatchReport updated = service.update(entity);
         return ResponseEntity.ok(CatchReportMapper.toDto(updated));
     }
