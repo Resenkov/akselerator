@@ -1,9 +1,3 @@
--- V2__add_updated_at_columns.sql
--- Добавляет updated_at для таблиц, но сначала проверяет наличие таблицы.
--- Сохранять в UTF-8 без BOM.
-
--- helper: для каждой таблицы выполняем блок IF EXISTS ... THEN (ALTER + UPDATE) END IF
-
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'fishing_regions' AND table_schema = 'public') THEN

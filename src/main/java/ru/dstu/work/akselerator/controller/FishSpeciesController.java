@@ -13,7 +13,7 @@ import ru.dstu.work.akselerator.service.FishSpeciesService;
 import ru.dstu.work.akselerator.entity.FishSpecies;
 
 @RestController
-@RequestMapping("/api/fish-species")
+@RequestMapping("/api/species")
 public class FishSpeciesController {
 
     private final FishSpeciesService service;
@@ -51,7 +51,6 @@ public class FishSpeciesController {
         try {
             entity.getClass().getMethod("setId", Long.class).invoke(entity, id);
         } catch (Exception e) {
-            // ignore - service may handle id mapping
         }
         FishSpecies updated = service.update(entity);
         return ResponseEntity.ok(FishSpeciesMapper.toDto(updated));

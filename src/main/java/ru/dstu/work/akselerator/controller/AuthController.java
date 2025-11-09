@@ -1,86 +1,81 @@
 package ru.dstu.work.akselerator.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.dstu.work.akselerator.dto.*;
 import ru.dstu.work.akselerator.entity.User;
 import ru.dstu.work.akselerator.entity.UserRole;
-import ru.dstu.work.akselerator.repository.UserRepository;
 import ru.dstu.work.akselerator.repository.RoleRepository;
-import ru.dstu.work.akselerator.security.JwtTokenProvider;
+import ru.dstu.work.akselerator.repository.UserRepository;
+import ru.dstu.work.akselerator.repository.UserRoleRepository;
+import ru.dstu.work.akselerator.security.TokenIssuer;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authManager;
-    private final JwtTokenProvider tokenProvider;
+    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UserRoleRepository userRoleRepository;
+    private final TokenIssuer tokenIssuer;
 
-    public AuthController(AuthenticationManager authManager,
-                          JwtTokenProvider tokenProvider,
+    public AuthController(AuthenticationManager authenticationManager,
+                          PasswordEncoder passwordEncoder,
                           UserRepository userRepository,
                           RoleRepository roleRepository,
-                          PasswordEncoder passwordEncoder) {
-        this.authManager = authManager;
-        this.tokenProvider = tokenProvider;
+                          UserRoleRepository userRoleRepository,
+                          TokenIssuer tokenIssuer) {
+        this.authenticationManager = authenticationManager;
+        this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.userRoleRepository = userRoleRepository;
+        this.tokenIssuer = tokenIssuer;
+    }
+
+    public record RegisterRequest(String username, String email, String password) {
+    }
+
+    public record LoginRequest(String username, String password) {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Validated @RequestBody RegisterRequest rq) {
-        if (userRepository.findByUsername(rq.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "username_taken"));
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
+        if (userRepository.findByUsername(req.username()).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "username already exists"));
         }
-
-        User u = new User();
-        u.setUsername(rq.getUsername());
-        u.setEmail(rq.getEmail());
-        u.setPasswordHash(passwordEncoder.encode(rq.getPassword()));
-        u.setActive(true);
-
-        if (u.getRoles() == null) {
-            u.setRoles(new HashSet<>());
-        }
+        var u = new User();
+        u.setUsername(req.username());
+        u.setEmail(req.email());
+        u.setPasswordHash(passwordEncoder.encode(req.password()));
+        var saved = userRepository.save(u); // use separate final reference below
 
         roleRepository.findByName("fisherman").ifPresent(role -> {
-            UserRole ur = new UserRole();
-            ur.setUser(u);
-            ur.setRole(role);
-            u.getRoles().add(ur);
+            userRoleRepository.save(new UserRole(saved, role, null));
         });
 
-        userRepository.save(u);
-        return ResponseEntity.ok(Map.of("status", "ok"));
+        return ResponseEntity.ok(Map.of("message", "registered"));
     }
 
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Validated @RequestBody LoginRequest rq) {
-        Authentication authentication = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(rq.getUsername(), rq.getPassword())
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(req.username(), req.password())
         );
 
-        // build token
-        var userDetails = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(a -> a.getAuthority().replace("ROLE_", ""))
-                .collect(Collectors.toList());
+        String token = tokenIssuer.issue(auth);
 
-        String token = tokenProvider.createToken(userDetails.getUsername(), roles);
-        return ResponseEntity.ok(new LoginResponse(token, "Bearer"));
+        return ResponseEntity.ok(Map.of(
+                "token", token,
+                "tokenType", "Bearer"
+        ));
     }
 }
