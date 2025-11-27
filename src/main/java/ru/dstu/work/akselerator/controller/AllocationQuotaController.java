@@ -45,6 +45,13 @@ public class AllocationQuotaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(AllocationQuotaMapper.toDto(saved));
     }
 
+    @GetMapping("/organizations/{id}")
+    public ResponseEntity<Page<AllocationQuotaDto>> findByOrganizationId(@PathVariable Long id, Pageable pageable) {
+        Page<AllocationQuota> page = service.findByOrganizationId(id, pageable);
+        Page<AllocationQuotaDto> dtoPage = page.map(AllocationQuotaMapper::toDto);
+        return  ResponseEntity.ok(dtoPage);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<AllocationQuotaDto> update(@PathVariable Long id, @Validated @RequestBody AllocationQuotaDto dto) {
         AllocationQuota entity = AllocationQuotaMapper.toEntity(dto);

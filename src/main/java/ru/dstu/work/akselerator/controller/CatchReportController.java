@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.CatchReportDto;
 import ru.dstu.work.akselerator.dto.CreateCatchResult;
+import ru.dstu.work.akselerator.dto.OrganizationCatchStatsDto;
 import ru.dstu.work.akselerator.mapper.CatchReportMapper;
 import ru.dstu.work.akselerator.service.CatchReportService;
 import ru.dstu.work.akselerator.entity.CatchReport;
@@ -42,6 +43,27 @@ public class CatchReportController {
         Page<CatchReportDto> dtoPage = page.map(CatchReportMapper::toDto);
         return ResponseEntity.ok(dtoPage);
     }
+
+    @GetMapping("/organization/{id}/last3")
+    public ResponseEntity<Page<CatchReportDto>> findLast3ByOrganization(@PathVariable Long id) {
+        Page<CatchReport> page = service.findLast3ByOrganization(id);
+        Page<CatchReportDto> dtoPage = page.map(CatchReportMapper::toDto);
+        return ResponseEntity.ok(dtoPage);
+    }
+
+    @GetMapping("/organization/{id}/stats")
+    public ResponseEntity<OrganizationCatchStatsDto> getOrganizationStats(@PathVariable Long id) {
+        OrganizationCatchStatsDto stats = service.getOrganizationStats(id);
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/organization/{id}")
+    public ResponseEntity<Page<CatchReportDto>> findByOrganizationId(@PathVariable Long id, Pageable pageable){
+        Page<CatchReport> page = service.findByOrganization(id, pageable);
+        Page<CatchReportDto> dtoPage = page.map(CatchReportMapper::toDto);
+        return ResponseEntity.ok(dtoPage);
+    }
+
 
     @GetMapping("/" + "{" + "id" + "}")
     public ResponseEntity<CatchReportDto> get(@PathVariable Long id) {

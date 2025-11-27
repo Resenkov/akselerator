@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ru.dstu.work.akselerator.dto.CatchReportDto;
 import ru.dstu.work.akselerator.dto.CreateCatchResult;
+import ru.dstu.work.akselerator.dto.OrganizationCatchStatsDto;
 import ru.dstu.work.akselerator.entity.CatchReport;
 
 import java.time.LocalDate;
@@ -16,8 +17,7 @@ public interface CatchReportService {
     CatchReport update(CatchReport report);
     void deleteById(Long id);
     CreateCatchResult createCatch(CatchReportDto dto);
-
-    Page<CatchReport> findByReportedBy(Long reportedById, Pageable pageable);
+    Page<CatchReport> findLast3ByOrganization(Long organizationId);
+    OrganizationCatchStatsDto getOrganizationStats(Long organizationId);
     Page<CatchReport> findByOrganization(Long organizationId, Pageable pageable);
-    Page<CatchReport> findByFishingDateBetween(LocalDate start, LocalDate end, Pageable pageable);
 }

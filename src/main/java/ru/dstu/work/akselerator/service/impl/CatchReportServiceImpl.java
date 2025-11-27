@@ -2,11 +2,14 @@ package ru.dstu.work.akselerator.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.dstu.work.akselerator.dto.CatchReportDto;
 import ru.dstu.work.akselerator.dto.CreateCatchResult;
+import ru.dstu.work.akselerator.dto.OrganizationCatchStatsDto;
 import ru.dstu.work.akselerator.dto.WarningInfo;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
 import ru.dstu.work.akselerator.entity.CatchReport;
@@ -18,6 +21,7 @@ import java.math.RoundingMode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Optional;
 
 @Service
@@ -64,8 +68,13 @@ public class CatchReportServiceImpl implements CatchReportService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CatchReport> findByReportedBy(Long reportedById, Pageable pageable) {
-        return repository.findByReportedById(reportedById, pageable);
+    public Page<CatchReport> findLast3ByOrganization(Long organizationId) {
+        PageRequest pageable = PageRequest.of(
+                0,
+                3,
+                Sort.by(Sort.Direction.DESC, "fishingDate").and(Sort.by(Sort.Direction.DESC, "id"))
+        );
+        return repository.findByOrganizationId(organizationId, pageable);
     }
 
     @Override
@@ -74,10 +83,45 @@ public class CatchReportServiceImpl implements CatchReportService {
         return repository.findByOrganizationId(organizationId, pageable);
     }
 
+
     @Override
     @Transactional(readOnly = true)
-    public Page<CatchReport> findByFishingDateBetween(LocalDate start, LocalDate end, Pageable pageable) {
-        return repository.findByFishingDateBetween(start, end, pageable);
+    public OrganizationCatchStatsDto getOrganizationStats(Long organizationId) {
+        long totalCatches = repository.countByOrganizationId(organizationId);
+
+        BigDecimal totalWeight = repository.sumWeightByOrganization(organizationId);
+        if (totalWeight == null) {
+            totalWeight = BigDecimal.ZERO;
+        }
+
+        YearMonth currentMonth = YearMonth.now();
+        LocalDate monthStart = currentMonth.atDay(1);
+        LocalDate monthEnd = currentMonth.atEndOfMonth();
+
+        long catchesThisMonth = repository.countByOrganizationIdAndFishingDateBetween(
+                organizationId,
+                monthStart,
+                monthEnd
+        );
+
+        Long topRegionId = null;
+        String topRegionName = null;
+
+        java.util.List<Object[]> regionStats = repository.findTopRegionByOrganization(organizationId);
+        if (!regionStats.isEmpty()) {
+            Object[] row = regionStats.get(0);
+            topRegionId = (Long) row[0];
+            topRegionName = (String) row[1];
+        }
+
+        return new OrganizationCatchStatsDto(
+                organizationId,
+                totalCatches,
+                totalWeight,
+                catchesThisMonth,
+                topRegionId,
+                topRegionName
+        );
     }
 
 
