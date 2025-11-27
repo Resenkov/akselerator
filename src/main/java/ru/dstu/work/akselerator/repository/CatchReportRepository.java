@@ -14,20 +14,34 @@ import java.time.LocalDate;
 @Repository
 public interface CatchReportRepository extends JpaRepository<CatchReport, Long> {
 
-    Page<CatchReport> findByReportedById(Long reportedById, Pageable pageable);
-
     Page<CatchReport> findByOrganizationId(Long organizationId, Pageable pageable);
 
-    Page<CatchReport> findByFishingDateBetween(LocalDate start, LocalDate end, Pageable pageable);
+    Page<CatchReport> findByVerifiedFalse(Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(c.weightKg), 0) FROM CatchReport c " +
-            "WHERE c.species.id = :speciesId AND c.region.id = :regionId " +
+            "WHERE c.species.id = :speciesId " +
+            "AND c.region.id = :regionId " +
+            "AND c.verified = true " +
             "AND c.fishingDate BETWEEN :start AND :end")
     BigDecimal sumWeightBySpeciesRegionAndPeriod(
             @Param("speciesId") Long speciesId,
             @Param("regionId") Long regionId,
             @Param("start") LocalDate start,
             @Param("end") LocalDate end);
+
+    @Query("SELECT COALESCE(SUM(c.weightKg), 0) FROM CatchReport c " +
+            "WHERE c.species.id = :speciesId " +
+            "AND c.region.id = :regionId " +
+            "AND c.organization.id = :orgId " +
+            "AND c.verified = true " +
+            "AND c.fishingDate BETWEEN :start AND :end")
+    BigDecimal sumWeightBySpeciesRegionPeriodForOrg(
+            @Param("speciesId") Long speciesId,
+            @Param("regionId") Long regionId,
+            @Param("orgId") Long orgId,
+            @Param("start") LocalDate start,
+            @Param("end") LocalDate end);
+
 
     long countByOrganizationId(Long organizationId);
 

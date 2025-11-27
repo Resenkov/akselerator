@@ -20,4 +20,10 @@ public interface CatchReportService {
     Page<CatchReport> findLast3ByOrganization(Long organizationId);
     OrganizationCatchStatsDto getOrganizationStats(Long organizationId);
     Page<CatchReport> findByOrganization(Long organizationId, Pageable pageable);
+    CreateCatchResult verify(Long id);
+    void unverify(Long id);
+    Page<CatchReport> findMyReports(Pageable pageable);
+
+    Page<CatchReport> findPending(Pageable pageable);
+
 }
