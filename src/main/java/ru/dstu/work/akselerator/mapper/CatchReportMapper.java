@@ -1,6 +1,7 @@
 package ru.dstu.work.akselerator.mapper;
 
 import ru.dstu.work.akselerator.dto.CatchReportDto;
+import ru.dstu.work.akselerator.dto.LastCatchRowDto;
 import ru.dstu.work.akselerator.entity.CatchReport;
 import ru.dstu.work.akselerator.entity.Organization;
 import ru.dstu.work.akselerator.entity.User;
@@ -35,4 +36,28 @@ public class CatchReportMapper {
         e.setVerified(d.isVerified());
         return e;
     }
+
+    public static LastCatchRowDto toLastRowDto(CatchReport c) {
+        if (c == null) return null;
+
+        LastCatchRowDto dto = new LastCatchRowDto();
+        dto.setId(c.getId());
+        dto.setFishingDate(c.getFishingDate());
+        dto.setWeightKg(c.getWeightKg());
+        dto.setNotes(c.getNotes());
+        dto.setVerified(c.isVerified());
+
+        if (c.getSpecies() != null) {
+            dto.setSpeciesName(c.getSpecies().getCommonName());
+            dto.setSpeciesScientificName(c.getSpecies().getScientificName());
+        }
+
+        if (c.getRegion() != null) {
+            dto.setRegionName(c.getRegion().getName());
+            dto.setRegionCode(c.getRegion().getCode());
+        }
+
+        return dto;
+    }
+
 }

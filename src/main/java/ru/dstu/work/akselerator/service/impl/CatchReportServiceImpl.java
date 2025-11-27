@@ -8,10 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.dstu.work.akselerator.dto.CatchReportDto;
-import ru.dstu.work.akselerator.dto.CreateCatchResult;
-import ru.dstu.work.akselerator.dto.OrganizationCatchStatsDto;
-import ru.dstu.work.akselerator.dto.WarningInfo;
+import ru.dstu.work.akselerator.dto.*;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
 import ru.dstu.work.akselerator.entity.CatchReport;
 import ru.dstu.work.akselerator.entity.User;
@@ -25,6 +22,7 @@ import java.math.RoundingMode;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -190,6 +188,52 @@ public class CatchReportServiceImpl implements CatchReportService {
         Long orgId = current.getOrganization().getId();
         return repository.findByOrganizationId(orgId, pageable);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LastCatchesTableDto getLast3TableForCurrentOrganization() {
+        User current = getCurrentUser();
+
+        LastCatchesTableDto table = new LastCatchesTableDto();
+
+        // 9 колонок под все поля CatchReportDto
+        table.setColumns(List.of(
+                new TableColumnDto("ID отчёта", "id"),
+                new TableColumnDto("ID организации", "organizationId"),
+                new TableColumnDto("ID пользователя (reportedBy)", "reportedById"),
+                new TableColumnDto("ID вида рыбы", "speciesId"),
+                new TableColumnDto("ID региона", "regionId"),
+                new TableColumnDto("Дата вылова", "fishingDate"),
+                new TableColumnDto("Вес, кг", "weightKg"),
+                new TableColumnDto("Примечание", "notes"),
+                new TableColumnDto("Подтверждён", "verified")
+        ));
+
+        if (current.getOrganization() == null) {
+            table.setData(List.of());
+            return table;
+        }
+
+        Long orgId = current.getOrganization().getId();
+
+        PageRequest pageable = PageRequest.of(
+                0,
+                3,
+                Sort.by(Sort.Direction.DESC, "fishingDate")
+                        .and(Sort.by(Sort.Direction.DESC, "id"))
+        );
+
+        List<CatchReport> reports =
+                repository.findByOrganizationId(orgId, pageable).getContent();
+
+        List<CatchReportDto> dtoList = reports.stream()
+                .map(CatchReportMapper::toDto)
+                .toList();
+
+        table.setData(dtoList);
+        return table;
+    }
+
 
     @Override
     @Transactional(readOnly = true)

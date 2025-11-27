@@ -10,12 +10,14 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.CatchReportDto;
 import ru.dstu.work.akselerator.dto.CreateCatchResult;
+import ru.dstu.work.akselerator.dto.LastCatchesTableDto;
 import ru.dstu.work.akselerator.dto.OrganizationCatchStatsDto;
 import ru.dstu.work.akselerator.entity.CatchReport;
 import ru.dstu.work.akselerator.mapper.CatchReportMapper;
 import ru.dstu.work.akselerator.service.CatchReportService;
 
 import java.util.HashMap;
+
 import java.util.Map;
 
 @RestController
@@ -106,17 +108,13 @@ public class CatchReportController {
         return ResponseEntity.ok(dtoPage);
     }
 
-    /**
-     * 3 последних отчёта по организации — тоже, скорее всего, только для admin
-     * (или можешь оставить открытым, если это нужно фронту).
-     */
-    @GetMapping("/organization/{id}/last3")
-    public ResponseEntity<Page<CatchReportDto>> findLast3ByOrganization(@PathVariable Long id) {
-        Page<CatchReport> page = service.findLast3ByOrganization(id);
-        Page<CatchReportDto> dtoPage = page.map(CatchReportMapper::toDto);
-        return ResponseEntity.ok(dtoPage);
-    }
 
+    @PreAuthorize("hasRole('FISHERMAN')")
+    @GetMapping("/my/last3/table")
+    public ResponseEntity<LastCatchesTableDto> myLast3Table() {
+        LastCatchesTableDto table = service.getLast3TableForCurrentOrganization();
+        return ResponseEntity.ok(table);
+    }
     /**
      * Статистика по организации — тоже админский функционал.
      */

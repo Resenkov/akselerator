@@ -4,10 +4,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ru.dstu.work.akselerator.dto.CatchReportDto;
 import ru.dstu.work.akselerator.dto.CreateCatchResult;
+import ru.dstu.work.akselerator.dto.LastCatchesTableDto;
 import ru.dstu.work.akselerator.dto.OrganizationCatchStatsDto;
 import ru.dstu.work.akselerator.entity.CatchReport;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface CatchReportService {
@@ -23,6 +25,7 @@ public interface CatchReportService {
     CreateCatchResult verify(Long id);
     void unverify(Long id);
     Page<CatchReport> findMyReports(Pageable pageable);
+    LastCatchesTableDto getLast3TableForCurrentOrganization();
 
     Page<CatchReport> findPending(Pageable pageable);
 

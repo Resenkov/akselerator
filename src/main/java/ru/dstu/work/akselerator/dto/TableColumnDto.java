@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Описание колонки таблицы для фронтенда.
+ * Описание колонки таблицы для фронта.
  */
 @Getter
 @Setter
