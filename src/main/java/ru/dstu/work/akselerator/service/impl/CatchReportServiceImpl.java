@@ -234,6 +234,62 @@ public class CatchReportServiceImpl implements CatchReportService {
         return table;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public CatchReportsTableDto findByOrganizationAsTable(Long organizationId, Pageable pageable) {
+        Page<CatchReport> page = repository.findByOrganizationId(organizationId, pageable);
+
+        CatchReportsTableDto table = new CatchReportsTableDto();
+
+        // колонки – уже по "читаемым" полям, а не по id
+        table.setColumns(List.of(
+                new TableColumnDto("ID отчёта", "id"),
+                new TableColumnDto("Организация", "organizationName"),
+                new TableColumnDto("Пользователь", "reportedByUsername"),
+                new TableColumnDto("Вид рыбы (рус.)", "speciesCommonName"),
+                new TableColumnDto("Вид рыбы (лат.)", "speciesScientificName"),
+                new TableColumnDto("Регион", "regionName"),
+                new TableColumnDto("Код региона", "regionCode"),
+                new TableColumnDto("Дата вылова", "fishingDate"),
+                new TableColumnDto("Вес, кг", "weightKg"),
+                new TableColumnDto("Примечание", "notes"),
+                new TableColumnDto("Подтверждён", "verified")
+        ));
+
+        // маппим каждый CatchReport в "развёрнутую" строку
+        List<CatchReportTableRowDto> rows = page.getContent().stream()
+                .map(c -> {
+                    CatchReportTableRowDto row = new CatchReportTableRowDto();
+                    row.setId(c.getId());
+
+                    if (c.getOrganization() != null) {
+                        row.setOrganizationName(c.getOrganization().getName());
+                    }
+                    if (c.getReportedBy() != null) {
+                        row.setReportedByUsername(c.getReportedBy().getUsername());
+                    }
+                    if (c.getSpecies() != null) {
+                        row.setSpeciesCommonName(c.getSpecies().getCommonName());
+                        row.setSpeciesScientificName(c.getSpecies().getScientificName());
+                    }
+                    if (c.getRegion() != null) {
+                        row.setRegionName(c.getRegion().getName());
+                        row.setRegionCode(c.getRegion().getCode());
+                    }
+
+                    row.setFishingDate(c.getFishingDate());
+                    row.setWeightKg(c.getWeightKg());
+                    row.setNotes(c.getNotes());
+                    row.setVerified(c.isVerified());
+
+                    return row;
+                })
+                .toList();
+
+        table.setData(rows);
+        return table;
+    }
+
 
     @Override
     @Transactional(readOnly = true)

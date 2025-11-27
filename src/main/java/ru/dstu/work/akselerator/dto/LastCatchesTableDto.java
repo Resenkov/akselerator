@@ -14,7 +14,6 @@ import java.util.List;
 @Setter
 public class LastCatchesTableDto {
 
-    @JsonProperty("colums") // фронтендер так хочет 🙃
     private List<TableColumnDto> columns;
 
     // ВНИМАНИЕ: тут теперь полный DTO отчёта

@@ -8,10 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.dstu.work.akselerator.dto.CatchReportDto;
-import ru.dstu.work.akselerator.dto.CreateCatchResult;
-import ru.dstu.work.akselerator.dto.LastCatchesTableDto;
-import ru.dstu.work.akselerator.dto.OrganizationCatchStatsDto;
+import ru.dstu.work.akselerator.dto.*;
 import ru.dstu.work.akselerator.entity.CatchReport;
 import ru.dstu.work.akselerator.mapper.CatchReportMapper;
 import ru.dstu.work.akselerator.service.CatchReportService;
@@ -132,6 +129,13 @@ public class CatchReportController {
         Page<CatchReport> page = service.findByOrganization(id, pageable);
         Page<CatchReportDto> dtoPage = page.map(CatchReportMapper::toDto);
         return ResponseEntity.ok(dtoPage);
+    }
+
+    @GetMapping("/organization/{id}/table")
+    public ResponseEntity<CatchReportsTableDto> findByOrganizationTable(@PathVariable Long id,
+                                                                        Pageable pageable) {
+        CatchReportsTableDto table = service.findByOrganizationAsTable(id, pageable);
+        return ResponseEntity.ok(table);
     }
 
     /**
