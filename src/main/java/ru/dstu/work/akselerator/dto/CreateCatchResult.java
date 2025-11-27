@@ -1,10 +1,14 @@
 package ru.dstu.work.akselerator.dto;
 
+import lombok.Getter;
+import lombok.Setter;
 import ru.dstu.work.akselerator.entity.CatchReport;
 
 /**
  * Результат создания отчёта об улове: сохранённая сущность + опциональное предупреждение.
  */
+@Setter
+@Getter
 public class CreateCatchResult {
 
     private CatchReport report;
@@ -17,19 +21,4 @@ public class CreateCatchResult {
         this.warning = warning;
     }
 
-    public CatchReport getReport() {
-        return report;
-    }
-
-    public void setReport(CatchReport report) {
-        this.report = report;
-    }
-
-    public WarningInfo getWarning() {
-        return warning;
-    }
-
-    public void setWarning(WarningInfo warning) {
-        this.warning = warning;
-    }
 }

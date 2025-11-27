@@ -19,6 +19,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.nio.charset.StandardCharsets;
 
@@ -39,27 +42,40 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
 
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // публичные
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/fishing-regions/**", "/api/fish-species/**").permitAll()
-                        // всё остальное — только аутентифицированным
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e
-                        .authenticationEntryPoint(restAuthEntryPoint) // 401 JSON
-                        .accessDeniedHandler(jsonAccessDeniedHandler()) // 403 JSON
+                        .authenticationEntryPoint(restAuthEntryPoint)
+                        .accessDeniedHandler(jsonAccessDeniedHandler())
                 )
                 .authenticationProvider(daoAuthenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.addAllowedOriginPattern("*");          // разрешаем все origin (для dev)
+        config.addAllowedHeader("*");                 // любые заголовки
+        config.addAllowedMethod("*");                 // любые методы (GET, POST, PUT, DELETE, OPTIONS…)
+        config.setAllowCredentials(true);             // если нужен куки/credentials
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     @Bean

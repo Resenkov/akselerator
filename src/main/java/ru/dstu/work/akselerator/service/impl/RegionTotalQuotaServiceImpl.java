@@ -94,4 +94,13 @@ public class RegionTotalQuotaServiceImpl implements RegionTotalQuotaService {
         }
         return new QuotaExceededException(w);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RegionTotalQuotaDto> listByRegion(Long regionId) {
+        return regionRepo.findByRegionId(regionId).stream()
+                .map(RegionTotalQuotaMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
 }

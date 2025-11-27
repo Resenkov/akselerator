@@ -3,7 +3,11 @@ package ru.dstu.work.akselerator.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 public class OrganizationDto {
     private Long id;
 
@@ -29,14 +33,4 @@ public class OrganizationDto {
         this.regionId = regionId;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getOrgType() { return orgType; }
-    public void setOrgType(String orgType) { this.orgType = orgType; }
-    public String getInn() { return inn; }
-    public void setInn(String inn) { this.inn = inn; }
-    public Long getRegionId() { return regionId; }
-    public void setRegionId(Long regionId) { this.regionId = regionId; }
 }

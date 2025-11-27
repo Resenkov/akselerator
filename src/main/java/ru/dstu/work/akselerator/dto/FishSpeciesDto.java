@@ -2,7 +2,11 @@ package ru.dstu.work.akselerator.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 public class FishSpeciesDto {
     private Long id;
 
@@ -23,12 +27,4 @@ public class FishSpeciesDto {
         this.endangered = endangered;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getScientificName() { return scientificName; }
-    public void setScientificName(String scientificName) { this.scientificName = scientificName; }
-    public String getCommonName() { return commonName; }
-    public void setCommonName(String commonName) { this.commonName = commonName; }
-    public boolean isEndangered() { return endangered; }
-    public void setEndangered(boolean endangered) { this.endangered = endangered; }
 }

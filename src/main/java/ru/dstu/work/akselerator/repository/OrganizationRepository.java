@@ -7,4 +7,6 @@ import ru.dstu.work.akselerator.entity.Organization;
 
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, Long> {
+    boolean existsByInn(String inn);
+
 }

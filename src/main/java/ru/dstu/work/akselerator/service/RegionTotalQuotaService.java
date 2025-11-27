@@ -9,4 +9,5 @@ public interface RegionTotalQuotaService {
     void delete(Long id);
     RegionTotalQuotaDto get(Long id);
     List<RegionTotalQuotaDto> list();
+    List<RegionTotalQuotaDto> listByRegion(Long regionId);
 }

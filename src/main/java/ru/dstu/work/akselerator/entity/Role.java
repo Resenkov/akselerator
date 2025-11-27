@@ -1,7 +1,10 @@
 package ru.dstu.work.akselerator.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
 @Entity
 @Table(name = "roles")
 public class Role {
@@ -10,9 +13,11 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @Column(name = "name", length = 50, nullable = false, unique = true)
     private String name;
 
+    @Setter
     @Column(name = "description")
     private String description;
 
@@ -22,9 +27,4 @@ public class Role {
         this.description = description;
     }
 
-    public Long getId() { return id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
 }

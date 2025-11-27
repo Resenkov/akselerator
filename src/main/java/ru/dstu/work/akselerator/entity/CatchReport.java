@@ -51,19 +51,4 @@ public class CatchReport extends Auditable {
 
     public CatchReport() {}
 
-    public void setOrganization(Organization organization) { this.organization = organization; }
-
-    public void setReportedBy(User reportedBy) { this.reportedBy = reportedBy; }
-
-    public void setSpecies(FishSpecies species) { this.species = species; }
-
-    public void setRegion(FishingRegion region) { this.region = region; }
-
-    public void setFishingDate(LocalDate fishingDate) { this.fishingDate = fishingDate; }
-
-    public void setWeightKg(BigDecimal weightKg) { this.weightKg = weightKg; }
-
-    public void setNotes(String notes) { this.notes = notes; }
-
-    public void setVerified(boolean verified) { this.verified = verified; }
 }

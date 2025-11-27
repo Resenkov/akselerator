@@ -1,9 +1,14 @@
 package ru.dstu.work.akselerator.entity;
 
 import jakarta.persistence.Embeddable;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.Serializable;
 import java.util.Objects;
 
+@Setter
+@Getter
 @Embeddable
 public class UserRoleId implements Serializable {
 
@@ -16,11 +21,6 @@ public class UserRoleId implements Serializable {
         this.userId = userId;
         this.roleId = roleId;
     }
-
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-    public Long getRoleId() { return roleId; }
-    public void setRoleId(Long roleId) { this.roleId = roleId; }
 
     @Override
     public boolean equals(Object o) {

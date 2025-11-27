@@ -14,14 +14,14 @@ import java.time.LocalDate;
 @Repository
 public interface CatchReportRepository extends JpaRepository<CatchReport, Long> {
 
-    Page<CatchReport> findByReportedById(Long reportedById, Pageable pageable);
-
     Page<CatchReport> findByOrganizationId(Long organizationId, Pageable pageable);
 
-    Page<CatchReport> findByFishingDateBetween(LocalDate start, LocalDate end, Pageable pageable);
+    Page<CatchReport> findByVerifiedFalse(Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(c.weightKg), 0) FROM CatchReport c " +
-            "WHERE c.species.id = :speciesId AND c.region.id = :regionId " +
+            "WHERE c.species.id = :speciesId " +
+            "AND c.region.id = :regionId " +
+            "AND c.verified = true " +
             "AND c.fishingDate BETWEEN :start AND :end")
     BigDecimal sumWeightBySpeciesRegionAndPeriod(
             @Param("speciesId") Long speciesId,
@@ -29,7 +29,6 @@ public interface CatchReportRepository extends JpaRepository<CatchReport, Long> 
             @Param("start") LocalDate start,
             @Param("end") LocalDate end);
 
-    // Если счёт вести по организации (включая только отчёты той же компании)
     @Query("SELECT COALESCE(SUM(c.weightKg), 0) FROM CatchReport c " +
             "WHERE c.species.id = :speciesId AND c.region.id = :regionId " +
             "AND c.organization.id = :orgId " +
@@ -39,5 +38,24 @@ public interface CatchReportRepository extends JpaRepository<CatchReport, Long> 
             @Param("regionId") Long regionId,
             @Param("orgId") Long orgId,
             @Param("start") LocalDate start,
-            @Param("end") LocalDate end);
+            @Param("end") LocalDate end
+    );
+
+
+
+    long countByOrganizationId(Long organizationId);
+
+    @Query("SELECT COALESCE(SUM(c.weightKg), 0) FROM CatchReport c WHERE c.organization.id = :orgId")
+    BigDecimal sumWeightByOrganization(@Param("orgId") Long organizationId);
+
+    long countByOrganizationIdAndFishingDateBetween(Long organizationId, LocalDate start, LocalDate end);
+
+    @Query("""
+           SELECT c.region.id, c.region.name, COUNT(c) as cnt 
+           FROM CatchReport c 
+           WHERE c.organization.id = :orgId 
+           GROUP BY c.region.id, c.region.name 
+           ORDER BY cnt DESC
+           """)
+    java.util.List<Object[]> findTopRegionByOrganization(@Param("orgId") Long organizationId);
 }
