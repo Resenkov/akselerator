@@ -34,4 +34,7 @@ public class AllocationQuotaTableRowDto {
     private LocalDate periodStart;
     private LocalDate periodEnd;
     private BigDecimal limitKg;
+
+    // НОВОЕ: суммарный вылов по этой квоте
+    private BigDecimal usedKg;
 }

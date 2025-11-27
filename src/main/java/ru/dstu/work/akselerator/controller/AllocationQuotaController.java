@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.AllocationQuotaDto;
+import ru.dstu.work.akselerator.dto.AllocationQuotasTableDto;
 import ru.dstu.work.akselerator.dto.AvailableSpeciesAndRegionsDto;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
 import ru.dstu.work.akselerator.mapper.AllocationQuotaMapper;
@@ -51,6 +52,13 @@ public class AllocationQuotaController {
         Page<AllocationQuotaDto> dtoPage = page.map(AllocationQuotaMapper::toDto);
         return ResponseEntity.ok(dtoPage);
     }
+
+    @GetMapping("/table")
+    public ResponseEntity<AllocationQuotasTableDto> listAsTable(Pageable pageable) {
+        AllocationQuotasTableDto table = service.listAsTable(pageable);
+        return ResponseEntity.ok(table);
+    }
+
 
     /**
      * Получить одну мини-квоту по её идентификатору.

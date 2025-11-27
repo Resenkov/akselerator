@@ -12,6 +12,7 @@ import ru.dstu.work.akselerator.exception.QuotaExceededException;
 import ru.dstu.work.akselerator.mapper.FishSpeciesMapper;
 import ru.dstu.work.akselerator.mapper.FishingRegionMapper;
 import ru.dstu.work.akselerator.repository.AllocationQuotaRepository;
+import ru.dstu.work.akselerator.repository.CatchReportRepository;
 import ru.dstu.work.akselerator.repository.RegionTotalQuotaRepository;
 import ru.dstu.work.akselerator.repository.UserRepository;
 import ru.dstu.work.akselerator.service.AllocationQuotaService;
@@ -30,13 +31,15 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
     private final AllocationQuotaRepository repository;
     private final RegionTotalQuotaRepository regionTotalQuotaRepository;
     private final UserRepository userRepository;
+    private final CatchReportRepository catchReportRepository;
 
     @Autowired
     public AllocationQuotaServiceImpl(AllocationQuotaRepository repository,
-                                      RegionTotalQuotaRepository regionTotalQuotaRepository, UserRepository userRepository) {
+                                      RegionTotalQuotaRepository regionTotalQuotaRepository, UserRepository userRepository, CatchReportRepository catchReportRepository) {
         this.repository = repository;
         this.regionTotalQuotaRepository = regionTotalQuotaRepository;
         this.userRepository = userRepository;
+        this.catchReportRepository = catchReportRepository;
     }
 
     @Override
@@ -126,6 +129,81 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
         resp.setRegions(regionDtos);
         return resp;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AllocationQuotasTableDto listAsTable(Pageable pageable) {
+        Page<AllocationQuota> page = repository.findAll(pageable);
+
+        AllocationQuotasTableDto table = new AllocationQuotasTableDto();
+
+        table.setColumns(List.of(
+                new TableColumnDto("ID квоты", "id"),
+                new TableColumnDto("Организация (ID)", "organizationId"),
+                new TableColumnDto("Организация", "organizationName"),
+                new TableColumnDto("Вид рыбы (ID)", "speciesId"),
+                new TableColumnDto("Вид рыбы (рус.)", "speciesCommonName"),
+                new TableColumnDto("Вид рыбы (лат.)", "speciesScientificName"),
+                new TableColumnDto("Регион (ID)", "regionId"),
+                new TableColumnDto("Регион", "regionName"),
+                new TableColumnDto("Код региона", "regionCode"),
+                new TableColumnDto("Начало периода", "periodStart"),
+                new TableColumnDto("Конец периода", "periodEnd"),
+                new TableColumnDto("Лимит, кг", "limitKg"),
+                // НОВАЯ колонка
+                new TableColumnDto("Поймано, кг", "usedKg")
+        ));
+
+        var rows = page.getContent().stream()
+                .map(q -> {
+                    AllocationQuotaTableRowDto row = new AllocationQuotaTableRowDto();
+                    row.setId(q.getId());
+
+                    if (q.getOrganization() != null) {
+                        row.setOrganizationId(q.getOrganization().getId());
+                        row.setOrganizationName(q.getOrganization().getName());
+                    }
+
+                    if (q.getSpecies() != null) {
+                        row.setSpeciesId(q.getSpecies().getId());
+                        row.setSpeciesCommonName(q.getSpecies().getCommonName());
+                        row.setSpeciesScientificName(q.getSpecies().getScientificName());
+                    }
+
+                    if (q.getRegion() != null) {
+                        row.setRegionId(q.getRegion().getId());
+                        row.setRegionName(q.getRegion().getName());
+                        row.setRegionCode(q.getRegion().getCode());
+                    }
+
+                    row.setPeriodStart(q.getPeriodStart());
+                    row.setPeriodEnd(q.getPeriodEnd());
+                    row.setLimitKg(q.getLimitKg());
+
+                    // === НОВОЕ: считаем пойманное по этой квоте ===
+                    BigDecimal used = BigDecimal.ZERO;
+                    if (q.getOrganization() != null && q.getSpecies() != null && q.getRegion() != null) {
+                        used = catchReportRepository.sumWeightBySpeciesRegionPeriodForOrg(
+                                q.getSpecies().getId(),
+                                q.getRegion().getId(),
+                                q.getOrganization().getId(),
+                                q.getPeriodStart(),
+                                q.getPeriodEnd()
+                        );
+                    }
+                    if (used == null) {
+                        used = BigDecimal.ZERO;
+                    }
+                    row.setUsedKg(used);
+
+                    return row;
+                })
+                .toList();
+
+        table.setData(rows);
+        return table;
+    }
+
 
     @Override
     @Transactional(readOnly = true)
