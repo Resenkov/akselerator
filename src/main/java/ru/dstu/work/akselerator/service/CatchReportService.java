@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import ru.dstu.work.akselerator.dto.*;
 import ru.dstu.work.akselerator.entity.CatchReport;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CatchReportService {

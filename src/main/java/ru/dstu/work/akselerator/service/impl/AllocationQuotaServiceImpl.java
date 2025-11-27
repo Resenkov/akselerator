@@ -81,6 +81,61 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
     }
 
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<QuotaUsageSummaryDto> getMyQuotaUsageSummary() {
+        User current = getCurrentUser();
+
+        if (current.getOrganization() == null) {
+            return List.of();
+        }
+
+        Long orgId = current.getOrganization().getId();
+
+        var quotasPage = repository.findByOrganizationId(orgId, Pageable.unpaged());
+        var quotas = quotasPage.getContent();
+
+        return quotas.stream()
+                .map(q -> {
+                    QuotaUsageSummaryDto dto = new QuotaUsageSummaryDto();
+                    dto.setQuotaId(q.getId());
+
+                    if (q.getSpecies() != null) {
+                        dto.setSpeciesId(q.getSpecies().getId());
+                        dto.setSpeciesCommonName(q.getSpecies().getCommonName());
+                        dto.setSpeciesScientificName(q.getSpecies().getScientificName());
+                    }
+
+                    if (q.getRegion() != null) {
+                        dto.setRegionId(q.getRegion().getId());
+                        dto.setRegionName(q.getRegion().getName());
+                        dto.setRegionCode(q.getRegion().getCode());
+                    }
+
+                    dto.setPeriodStart(q.getPeriodStart());
+                    dto.setPeriodEnd(q.getPeriodEnd());
+                    dto.setLimitKg(q.getLimitKg());
+
+                    // считаем, сколько уже выловлено по этой квоте
+                    BigDecimal used = BigDecimal.ZERO;
+                    if (q.getOrganization() != null && q.getSpecies() != null && q.getRegion() != null) {
+                        used = catchReportRepository.sumWeightBySpeciesRegionPeriodForOrg(
+                                q.getSpecies().getId(),
+                                q.getRegion().getId(),
+                                q.getOrganization().getId(),
+                                q.getPeriodStart(),
+                                q.getPeriodEnd()
+                        );
+                    }
+                    if (used == null) used = BigDecimal.ZERO;
+                    dto.setUsedKg(used);
+
+                    return dto;
+                })
+                .toList();
+    }
+
+
     private User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)

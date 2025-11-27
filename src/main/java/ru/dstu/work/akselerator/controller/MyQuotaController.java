@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.AllocationQuotaDto;
+import ru.dstu.work.akselerator.dto.QuotaUsageSummaryDto;
 import ru.dstu.work.akselerator.dto.RegionTotalQuotaDto;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
 import ru.dstu.work.akselerator.entity.User;
@@ -89,6 +90,19 @@ public class MyQuotaController {
         Page<AllocationQuota> page = allocationQuotaService.findByOrganizationId(orgId, pageable);
         Page<AllocationQuotaDto> dtoPage = page.map(AllocationQuotaMapper::toDto);
         return ResponseEntity.ok(dtoPage);
+    }
+
+    /**
+     * Сводка по всем мини-квотам текущей организации:
+     * вид, регион, сколько уже выловлено и общий лимит.
+     *
+     * Доступ: FISHERMAN.
+     */
+    @PreAuthorize("hasRole('FISHERMAN')")
+    @GetMapping("/quota-usage")
+    public ResponseEntity<List<QuotaUsageSummaryDto>> getMyQuotaUsage() {
+        List<QuotaUsageSummaryDto> list = allocationQuotaService.getMyQuotaUsageSummary();
+        return ResponseEntity.ok(list);
     }
 
     /**
