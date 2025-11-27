@@ -120,7 +120,6 @@ public class CatchReportController {
     /**
      * Статистика по организации — тоже админский функционал.
      */
-    @PreAuthorize("hasRole('FISHERMAN')")
     @GetMapping("/organization/{id}/stats")
     public ResponseEntity<OrganizationCatchStatsDto> getOrganizationStats(@PathVariable Long id) {
         OrganizationCatchStatsDto stats = service.getOrganizationStats(id);
@@ -130,7 +129,6 @@ public class CatchReportController {
     /**
      * Все отчёты по организации — для админа (или в будущем для компании-хозяина).
      */
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/organization/{id}")
     public ResponseEntity<Page<CatchReportDto>> findByOrganizationId(@PathVariable Long id, Pageable pageable) {
         Page<CatchReport> page = service.findByOrganization(id, pageable);

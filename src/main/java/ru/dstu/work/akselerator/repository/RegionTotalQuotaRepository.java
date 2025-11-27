@@ -16,4 +16,6 @@ public interface RegionTotalQuotaRepository extends JpaRepository<RegionTotalQuo
     List<RegionTotalQuota> findOverlapping(@Param("regionId") Long regionId,
                                            @Param("periodStart") LocalDate periodStart,
                                            @Param("periodEnd") LocalDate periodEnd);
+
+    List<RegionTotalQuota> findByRegionId(Long id);
 }
