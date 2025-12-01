@@ -25,5 +25,6 @@ public interface AllocationQuotaService {
     List<AllocationQuota> findActiveFor(Long organizationId, Long speciesId, Long regionId, LocalDate date);
     AvailableSpeciesAndRegionsDto getAvailableSpeciesAndRegionsForCurrentOrg();
     AllocationQuotasTableDto listAsTable(Pageable pageable);
+    AllocationQuotasTableDto listAsTableForOrganization(Long organizationId, Pageable pageable);
 
 }

@@ -210,7 +210,16 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
     @Transactional(readOnly = true)
     public AllocationQuotasTableDto listAsTable(Pageable pageable) {
         Page<AllocationQuota> page = repository.findAll(pageable);
+        return buildTable(page);
+    }
 
+    @Override
+    public AllocationQuotasTableDto listAsTableForOrganization(Long organizationId, Pageable pageable) {
+        Page<AllocationQuota> page = repository.findByOrganizationId(organizationId, pageable);
+        return buildTable(page);
+    }
+
+    private AllocationQuotasTableDto buildTable(Page<AllocationQuota> page) {
         AllocationQuotasTableDto table = new AllocationQuotasTableDto();
 
         table.setColumns(List.of(

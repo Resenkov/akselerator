@@ -3,11 +3,14 @@ package ru.dstu.work.akselerator.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.AllocationQuotaDto;
+import ru.dstu.work.akselerator.dto.AllocationQuotasTableDto;
+import ru.dstu.work.akselerator.dto.AvailableSpeciesAndRegionsDto;
 import ru.dstu.work.akselerator.dto.QuotaUsageSummaryDto;
 import ru.dstu.work.akselerator.dto.RegionTotalQuotaDto;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
@@ -27,8 +30,8 @@ import java.util.List;
  *  - увидеть все мини-квоты своей организации;
  *  - посмотреть общие квоты по своему региону.
  *
- * ВАЖНО: этот контроллер только для чтения (read-only).
- * Создание/изменение/удаление квот остаётся в админских контроллерах.
+ * Здесь же вынесены пользовательские операции создания и просмотра мини-квот,
+ * чтобы отделить их от административных эндпоинтов AllocationQuotaController.
  */
 @RestController
 @RequestMapping("/api/my/quotas")
@@ -65,6 +68,28 @@ public class MyQuotaController {
                 .orElseThrow(() -> new IllegalStateException("User not found: " + username));
     }
 
+    @PreAuthorize("hasRole('FISHERMAN')")
+    @GetMapping("/allocation/available-species-regions")
+    public ResponseEntity<AvailableSpeciesAndRegionsDto> getAvailableSpeciesAndRegions() {
+        AvailableSpeciesAndRegionsDto dto = allocationQuotaService.getAvailableSpeciesAndRegionsForCurrentOrg();
+        return ResponseEntity.ok(dto);
+    }
+
+    @PreAuthorize("hasRole('FISHERMAN')")
+    @PostMapping("/allocation")
+    public ResponseEntity<AllocationQuotaDto> createForMyOrganization(@RequestBody AllocationQuotaDto dto) {
+        User current = getCurrentUser();
+        if (current.getOrganization() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        AllocationQuota entity = AllocationQuotaMapper.toEntity(dto);
+        entity.setOrganization(current.getOrganization());
+
+        AllocationQuota saved = allocationQuotaService.create(entity);
+        return ResponseEntity.status(HttpStatus.CREATED).body(AllocationQuotaMapper.toDto(saved));
+    }
+
     /**
      * Получить все мини-квоты (AllocationQuota) для организации текущего пользователя.
      *
@@ -92,6 +117,22 @@ public class MyQuotaController {
         return ResponseEntity.ok(dtoPage);
     }
 
+    @PreAuthorize("hasRole('FISHERMAN')")
+    @GetMapping("/allocation/table")
+    public ResponseEntity<AllocationQuotasTableDto> myAllocationQuotasTable(Pageable pageable) {
+        User current = getCurrentUser();
+
+        if (current.getOrganization() == null) {
+            AllocationQuotasTableDto empty = new AllocationQuotasTableDto();
+            empty.setData(List.of());
+            empty.setColumns(List.of());
+            return ResponseEntity.ok(empty);
+        }
+
+        AllocationQuotasTableDto table = allocationQuotaService.listAsTableForOrganization(current.getOrganization().getId(), pageable);
+        return ResponseEntity.ok(table);
+    }
+
     /**
      * Сводка по всем мини-квотам текущей организации:
      * вид, регион, сколько уже выловлено и общий лимит.
@@ -99,7 +140,7 @@ public class MyQuotaController {
      * Доступ: FISHERMAN.
      */
     @PreAuthorize("hasRole('FISHERMAN')")
-    @GetMapping("/quota-usage")
+    @GetMapping({"/quota-usage", "/allocation/usage"})
     public ResponseEntity<List<QuotaUsageSummaryDto>> getMyQuotaUsage() {
         List<QuotaUsageSummaryDto> list = allocationQuotaService.getMyQuotaUsageSummary();
         return ResponseEntity.ok(list);
