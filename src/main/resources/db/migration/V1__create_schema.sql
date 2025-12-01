@@ -1,6 +1,6 @@
 
 -- Удаляем в порядке зависимостей
-DROP TABLE IF EXISTS catch_reports, allocation_quotas, user_roles, users, roles, organizations, fish_species, fishing_regions;
+DROP TABLE IF EXISTS catch_reports, allocation_quotas, user_roles, users, roles, organizations, region_total_quotas, fish_species, fishing_regions;
 
 -- =============================================
 -- 1. Справочник: Рыбопромысловые регионы
@@ -34,23 +34,39 @@ COMMENT ON COLUMN fish_species.is_endangered IS 'Флаг для видов из
 CREATE UNIQUE INDEX idx_fish_species_scientific ON fish_species (LOWER(scientific_name));
 
 -- =============================================
--- 3. Организации (компании и госорганы)
+-- 3. Общие региональные квоты (RegionTotalQuota)
+-- =============================================
+CREATE TABLE region_total_quotas (
+                                     id            SERIAL PRIMARY KEY,
+                                     region_id     INTEGER NOT NULL REFERENCES fishing_regions(id) ON DELETE RESTRICT,
+                                     species_id    INTEGER NOT NULL REFERENCES fish_species(id) ON DELETE RESTRICT,
+                                     period_start  DATE NOT NULL,
+                                     period_end    DATE NOT NULL CHECK (period_end >= period_start),
+                                     limit_kg      NUMERIC(12, 3) NOT NULL CHECK (limit_kg > 0),
+                                     created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                                     UNIQUE (region_id, species_id, period_start, period_end)
+);
+
+COMMENT ON TABLE region_total_quotas IS 'Общий лимит квот по региону и виду рыбы';
+
+-- =============================================
+-- 4. Организации (компании и госорганы)
 -- =============================================
 CREATE TABLE organizations (
                                id          SERIAL PRIMARY KEY,
                                name        VARCHAR(200) NOT NULL,
-                               org_type    VARCHAR(20) NOT NULL CHECK (org_type IN ('COMPANY', 'GOVERNMENT')),
+                               org_type    VARCHAR(50) NOT NULL,
                                inn         VARCHAR(12) UNIQUE,
-                               region_id   INTEGER NOT NULL REFERENCES fishing_regions(id) ON DELETE RESTRICT,
+                               region_id   INTEGER REFERENCES fishing_regions(id) ON DELETE RESTRICT,
                                created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 COMMENT ON TABLE organizations IS 'Организации: рыбопромысловые компании и госорганы';
-COMMENT ON COLUMN organizations.org_type IS 'Тип: COMPANY или GOVERNMENT';
+COMMENT ON COLUMN organizations.org_type IS 'Тип организации (например, ООО, ИП, госорган и т.п.)';
 COMMENT ON COLUMN organizations.inn IS 'ИНН (заполняется только для COMPANY)';
 
 -- =============================================
--- 4. Роли пользователей
+-- 5. Роли пользователей
 -- =============================================
 CREATE TABLE roles (
                        id          SERIAL PRIMARY KEY,
@@ -61,7 +77,7 @@ CREATE TABLE roles (
 COMMENT ON TABLE roles IS 'Роли в системе (RBAC)';
 
 -- =============================================
--- 5. Пользователи
+-- 6. Пользователи
 -- =============================================
 CREATE TABLE users (
                        id              SERIAL PRIMARY KEY,
@@ -79,7 +95,7 @@ COMMENT ON COLUMN users.organization_id IS 'Организация (может �
 CREATE INDEX idx_users_org ON users (organization_id);
 
 -- =============================================
--- 6. Связь пользователей и ролей (многие-ко-многим)
+-- 7. Связь пользователей и ролей (многие-ко-многим)
 -- =============================================
 CREATE TABLE user_roles (
                             user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -92,7 +108,7 @@ CREATE TABLE user_roles (
 COMMENT ON TABLE user_roles IS 'Назначение ролей пользователям';
 
 -- =============================================
--- 7. Квоты (только для организаций типа COMPANY)
+-- 8. Квоты
 -- =============================================
 CREATE TABLE allocation_quotas (
                                    id            SERIAL PRIMARY KEY,
@@ -110,26 +126,8 @@ COMMENT ON TABLE allocation_quotas IS 'Выделенные квоты на пе
 
 CREATE INDEX idx_quotas_lookup ON allocation_quotas (organization_id, species_id, region_id, period_start, period_end);
 
--- Триггер: квота только для COMPANY
-CREATE OR REPLACE FUNCTION enforce_quota_for_company()
-RETURNS TRIGGER AS $$
-DECLARE
-org_type organizations.org_type%TYPE;
-BEGIN
-SELECT o.org_type INTO org_type FROM organizations o WHERE o.id = NEW.organization_id;
-IF org_type IS NULL OR org_type != 'COMPANY' THEN
-        RAISE EXCEPTION 'Квоты могут назначаться только организациям типа COMPANY (org id: %)', NEW.organization_id;
-END IF;
-RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_quota_company_check
-    BEFORE INSERT OR UPDATE ON allocation_quotas
-                         FOR EACH ROW EXECUTE FUNCTION enforce_quota_for_company();
-
 -- =============================================
--- 8. Отчёты об улове
+-- 9. Отчёты об улове
 -- =============================================
 CREATE TABLE catch_reports (
                                id             SERIAL PRIMARY KEY,
@@ -190,12 +188,19 @@ INSERT INTO fish_species (scientific_name, common_name, is_endangered) VALUES
                                                                            ('Mugil cephalus', 'Кефаль', FALSE),
                                                                            ('Psetta maxima', 'Камбала-калкан', FALSE);
 
+-- Общие региональные квоты (по видам рыбы)
+INSERT INTO region_total_quotas (region_id, species_id, period_start, period_end, limit_kg)
+VALUES
+    (1, 1, '2025-04-01'::DATE, '2025-11-30'::DATE, 30000.000),
+    (2, 1, '2025-04-01'::DATE, '2025-11-30'::DATE, 18000.000),
+    (2, 4, '2025-04-01'::DATE, '2025-11-30'::DATE, 2000.000);
+
 -- Организации
 INSERT INTO organizations (name, org_type, inn, region_id) VALUES
-                                                               ('Рыболовецкая артель «Донская»', 'COMPANY', '123456789012', 1),
-                                                               ('ООО «Черноморский промысел»', 'COMPANY', '234567890123', 2),
-                                                               ('Управление Росрыболовства по ЮФО', 'GOVERNMENT', NULL, 1),
-                                                               ('Федеральный оператор FishLog', 'GOVERNMENT', NULL, 1);
+                                                               ('Рыболовецкая артель «Донская»', 'ООО', '123456789012', 1),
+                                                               ('ООО «Черноморский промысел»', 'ООО', '234567890123', 2),
+                                                               ('Управление Росрыболовства по ЮФО', 'Госорган', NULL, 1),
+                                                               ('Федеральный оператор FishLog', 'Госорган', NULL, 1);
 
 -- Роли
 INSERT INTO roles (name, description) VALUES
@@ -232,7 +237,7 @@ FROM (VALUES
           ('ООО «Черноморский промысел»', 'Engraulis encrasicolus', 8000.000),
           ('ООО «Черноморский промысел»', 'Psetta maxima', 1200.000)
      ) AS q (org_name, sci_name, limit_kg)
-         JOIN organizations o ON o.name = q.org_name AND o.org_type = 'COMPANY'
+         JOIN organizations o ON o.name = q.org_name
          JOIN fish_species fs ON fs.scientific_name = q.sci_name;
 
 -- Пример отчёта об улове

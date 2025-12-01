@@ -10,6 +10,7 @@ import ru.dstu.work.akselerator.repository.FishSpeciesRepository;
 import ru.dstu.work.akselerator.service.FishSpeciesService;
 
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class FishSpeciesServiceImpl implements FishSpeciesService {
@@ -36,6 +37,12 @@ public class FishSpeciesServiceImpl implements FishSpeciesService {
     @Transactional(readOnly = true)
     public Page<FishSpecies> list(Pageable pageable) {
         return repository.findAll(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FishSpecies> listAll() {
+        return repository.findAll();
     }
 
     @Override

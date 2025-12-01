@@ -33,7 +33,7 @@ public class RegionTotalQuotaServiceImpl implements RegionTotalQuotaService {
     public RegionTotalQuotaDto create(RegionTotalQuotaDto dto) {
         // Проверяем, что существующие мини-квоты не превышают новый общий лимит:
         BigDecimal used = allocationRepo.sumLimitKgByRegionOverlappingPeriod(
-                dto.getRegionId(), dto.getPeriodStart(), dto.getPeriodEnd(), null);
+                dto.getRegionId(), dto.getSpeciesId(), dto.getPeriodStart(), dto.getPeriodEnd(), null);
 
         if (used.compareTo(dto.getLimitKg()) > 0) {
             throw quotaWarn("Сумма мини-квот уже превышает устанавливаемый общий лимит.",
@@ -49,7 +49,7 @@ public class RegionTotalQuotaServiceImpl implements RegionTotalQuotaService {
                 .orElseThrow(() -> new IllegalArgumentException("RegionTotalQuota not found: id=" + id));
 
         BigDecimal used = allocationRepo.sumLimitKgByRegionOverlappingPeriod(
-                dto.getRegionId(), dto.getPeriodStart(), dto.getPeriodEnd(), null);
+                dto.getRegionId(), dto.getSpeciesId(), dto.getPeriodStart(), dto.getPeriodEnd(), null);
 
         if (used.compareTo(dto.getLimitKg()) > 0) {
             throw quotaWarn("Сумма мини-квот превышает новый общий лимит.", dto.getLimitKg(), used);
@@ -59,6 +59,9 @@ public class RegionTotalQuotaServiceImpl implements RegionTotalQuotaService {
         var fr = new ru.dstu.work.akselerator.entity.FishingRegion();
         fr.setId(dto.getRegionId());
         existing.setRegion(fr);
+        var fs = new ru.dstu.work.akselerator.entity.FishSpecies();
+        fs.setId(dto.getSpeciesId());
+        existing.setSpecies(fs);
         existing.setPeriodStart(dto.getPeriodStart());
         existing.setPeriodEnd(dto.getPeriodEnd());
 

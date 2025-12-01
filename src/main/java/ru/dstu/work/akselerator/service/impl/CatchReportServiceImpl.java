@@ -196,13 +196,14 @@ public class CatchReportServiceImpl implements CatchReportService {
 
         LastCatchesTableDto table = new LastCatchesTableDto();
 
-        // 9 колонок под все поля CatchReportDto
         table.setColumns(List.of(
                 new TableColumnDto("ID отчёта", "id"),
-                new TableColumnDto("ID организации", "organizationId"),
-                new TableColumnDto("ID пользователя (reportedBy)", "reportedById"),
-                new TableColumnDto("ID вида рыбы", "speciesId"),
-                new TableColumnDto("ID региона", "regionId"),
+                new TableColumnDto("Организация", "organizationName"),
+                new TableColumnDto("Пользователь", "reportedByUsername"),
+                new TableColumnDto("Вид рыбы (рус.)", "speciesCommonName"),
+                new TableColumnDto("Вид рыбы (лат.)", "speciesScientificName"),
+                new TableColumnDto("Регион", "regionName"),
+                new TableColumnDto("Код региона", "regionCode"),
                 new TableColumnDto("Дата вылова", "fishingDate"),
                 new TableColumnDto("Вес, кг", "weightKg"),
                 new TableColumnDto("Примечание", "notes"),
@@ -223,14 +224,12 @@ public class CatchReportServiceImpl implements CatchReportService {
                         .and(Sort.by(Sort.Direction.DESC, "id"))
         );
 
-        List<CatchReport> reports =
-                repository.findByOrganizationId(orgId, pageable).getContent();
-
-        List<CatchReportDto> dtoList = reports.stream()
-                .map(CatchReportMapper::toDto)
+        List<CatchReportTableRowDto> rows = repository.findByOrganizationId(orgId, pageable)
+                .stream()
+                .map(this::mapToTableRow)
                 .toList();
 
-        table.setData(dtoList);
+        table.setData(rows);
         return table;
     }
 
@@ -258,36 +257,38 @@ public class CatchReportServiceImpl implements CatchReportService {
 
         // маппим каждый CatchReport в "развёрнутую" строку
         List<CatchReportTableRowDto> rows = page.getContent().stream()
-                .map(c -> {
-                    CatchReportTableRowDto row = new CatchReportTableRowDto();
-                    row.setId(c.getId());
-
-                    if (c.getOrganization() != null) {
-                        row.setOrganizationName(c.getOrganization().getName());
-                    }
-                    if (c.getReportedBy() != null) {
-                        row.setReportedByUsername(c.getReportedBy().getUsername());
-                    }
-                    if (c.getSpecies() != null) {
-                        row.setSpeciesCommonName(c.getSpecies().getCommonName());
-                        row.setSpeciesScientificName(c.getSpecies().getScientificName());
-                    }
-                    if (c.getRegion() != null) {
-                        row.setRegionName(c.getRegion().getName());
-                        row.setRegionCode(c.getRegion().getCode());
-                    }
-
-                    row.setFishingDate(c.getFishingDate());
-                    row.setWeightKg(c.getWeightKg());
-                    row.setNotes(c.getNotes());
-                    row.setVerified(c.isVerified());
-
-                    return row;
-                })
+                .map(this::mapToTableRow)
                 .toList();
 
         table.setData(rows);
         return table;
+    }
+
+    private CatchReportTableRowDto mapToTableRow(CatchReport c) {
+        CatchReportTableRowDto row = new CatchReportTableRowDto();
+        row.setId(c.getId());
+
+        if (c.getOrganization() != null) {
+            row.setOrganizationName(c.getOrganization().getName());
+        }
+        if (c.getReportedBy() != null) {
+            row.setReportedByUsername(c.getReportedBy().getUsername());
+        }
+        if (c.getSpecies() != null) {
+            row.setSpeciesCommonName(c.getSpecies().getCommonName());
+            row.setSpeciesScientificName(c.getSpecies().getScientificName());
+        }
+        if (c.getRegion() != null) {
+            row.setRegionName(c.getRegion().getName());
+            row.setRegionCode(c.getRegion().getCode());
+        }
+
+        row.setFishingDate(c.getFishingDate());
+        row.setWeightKg(c.getWeightKg());
+        row.setNotes(c.getNotes());
+        row.setVerified(c.isVerified());
+
+        return row;
     }
 
 

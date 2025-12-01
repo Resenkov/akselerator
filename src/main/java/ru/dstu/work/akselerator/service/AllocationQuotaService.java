@@ -2,6 +2,7 @@ package ru.dstu.work.akselerator.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import ru.dstu.work.akselerator.dto.AllocationQuotaDto;
 import ru.dstu.work.akselerator.dto.AllocationQuotasTableDto;
 import ru.dstu.work.akselerator.dto.AvailableSpeciesAndRegionsDto;
 import ru.dstu.work.akselerator.dto.QuotaUsageSummaryDto;
@@ -19,10 +20,13 @@ public interface AllocationQuotaService {
     void deleteById(Long id);
 
     Page<AllocationQuota> findByOrganizationId(Long organizationId, Pageable pageable);
+    Page<AllocationQuotaDto> findDtosByOrganizationWithUsage(Long organizationId, Pageable pageable);
     List<QuotaUsageSummaryDto> getMyQuotaUsageSummary();
+    List<QuotaUsageSummaryDto> getQuotaUsageSummary(Long organizationId);
 
     List<AllocationQuota> findActiveFor(Long organizationId, Long speciesId, Long regionId, LocalDate date);
     AvailableSpeciesAndRegionsDto getAvailableSpeciesAndRegionsForCurrentOrg();
     AllocationQuotasTableDto listAsTable(Pageable pageable);
+    AllocationQuotasTableDto listAsTableForOrganization(Long organizationId, Pageable pageable);
 
 }

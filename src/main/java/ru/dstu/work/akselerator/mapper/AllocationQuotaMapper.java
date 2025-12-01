@@ -11,9 +11,20 @@ public class AllocationQuotaMapper {
         if (e == null) return null;
         AllocationQuotaDto d = new AllocationQuotaDto();
         d.setId(e.getId());
-        d.setOrganizationId(e.getOrganization() == null ? null : e.getOrganization().getId());
-        d.setSpeciesId(e.getSpecies() == null ? null : e.getSpecies().getId());
-        d.setRegionId(e.getRegion() == null ? null : e.getRegion().getId());
+        if (e.getOrganization() != null) {
+            d.setOrganizationId(e.getOrganization().getId());
+            d.setOrganizationName(e.getOrganization().getName());
+        }
+        if (e.getSpecies() != null) {
+            d.setSpeciesId(e.getSpecies().getId());
+            d.setSpeciesCommonName(e.getSpecies().getCommonName());
+            d.setSpeciesScientificName(e.getSpecies().getScientificName());
+        }
+        if (e.getRegion() != null) {
+            d.setRegionId(e.getRegion().getId());
+            d.setRegionName(e.getRegion().getName());
+            d.setRegionCode(e.getRegion().getCode());
+        }
         d.setPeriodStart(e.getPeriodStart());
         d.setPeriodEnd(e.getPeriodEnd());
         d.setLimitKg(e.getLimitKg());

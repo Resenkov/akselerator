@@ -1,7 +1,6 @@
 package ru.dstu.work.akselerator.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +19,6 @@ public class OrganizationDto {
     @Size(max = 12)
     private String inn;
 
-    @NotNull
     private Long regionId;
 
     public OrganizationDto() {}

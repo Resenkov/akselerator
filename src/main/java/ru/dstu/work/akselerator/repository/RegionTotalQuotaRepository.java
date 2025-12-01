@@ -12,8 +12,10 @@ public interface RegionTotalQuotaRepository extends JpaRepository<RegionTotalQuo
 
     @Query("SELECT r FROM RegionTotalQuota r " +
             "WHERE r.region.id = :regionId " +
+            "AND r.species.id = :speciesId " +
             "AND NOT (r.periodEnd < :periodStart OR r.periodStart > :periodEnd)")
     List<RegionTotalQuota> findOverlapping(@Param("regionId") Long regionId,
+                                           @Param("speciesId") Long speciesId,
                                            @Param("periodStart") LocalDate periodStart,
                                            @Param("periodEnd") LocalDate periodEnd);
 

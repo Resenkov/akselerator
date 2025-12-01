@@ -10,6 +10,7 @@ import ru.dstu.work.akselerator.repository.OrganizationRepository;
 import ru.dstu.work.akselerator.service.OrganizationService;
 
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class OrganizationServiceImpl implements OrganizationService {
@@ -36,6 +37,12 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Transactional(readOnly = true)
     public Page<Organization> list(Pageable pageable) {
         return repository.findAll(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Organization> listAll() {
+        return repository.findAll();
     }
 
     @Override
