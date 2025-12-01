@@ -1,6 +1,8 @@
 package ru.dstu.work.akselerator.controller;
 
 import jakarta.validation.Valid;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -65,7 +67,18 @@ public class AuthController {
         u.getRoles().add(link);
 
         userRepository.save(u);
-        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toDto(u));
+        Authentication authentication = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(rq.getUsername(), rq.getPassword())
+        );
+        var principal = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+        List<String> roles = principal.getAuthorities().stream()
+                .map(a -> a.getAuthority().replace("ROLE_", ""))
+                .toList();
+
+        String token = tokenProvider.createToken(principal.getUsername(), roles);
+
+        LoginResponse response = new LoginResponse(token, "Bearer", UserMapper.toDto(u), null, roles);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 
@@ -89,7 +102,7 @@ public class AuthController {
             orgDto = OrganizationMapper.toDto(userEntity.getOrganization());
         }
 
-        LoginResponse resp = new LoginResponse(token, "Bearer", userDto, orgDto);
+        LoginResponse resp = new LoginResponse(token, "Bearer", userDto, orgDto, roles);
         return ResponseEntity.ok(resp);
     }
 
@@ -162,10 +175,55 @@ public class AuthController {
         UserDto userDto = UserMapper.toDto(savedUser);
         OrganizationDto orgDto = OrganizationMapper.toDto(savedOrg);
 
-        LoginResponse resp = new LoginResponse(token, "Bearer", userDto, orgDto);
+        LoginResponse resp = new LoginResponse(token, "Bearer", userDto, orgDto, roles);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(resp);
+    }
+
+    @GetMapping("/token-info")
+    public ResponseEntity<?> tokenInfo(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                       @RequestParam(value = "token", required = false) String tokenParam) {
+        String token = extractToken(authorization, tokenParam);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "token_missing", "message", "Provide token via Authorization header or 'token' query param"));
+        }
+
+        boolean expired;
+        Claims claims;
+        try {
+            expired = tokenProvider.isExpired(token);
+            claims = tokenProvider.parseClaimsAllowExpired(token);
+        } catch (JwtException | IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("valid", false, "expired", false, "error", "invalid_token"));
+        }
+
+        String username = claims.getSubject();
+        List<String> roles = tokenProvider.getRoles(claims);
+
+        User userEntity = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalStateException("User not found for token subject"));
+
+        UserDto userDto = UserMapper.toDto(userEntity);
+        OrganizationDto orgDto = null;
+        if (userEntity.getOrganization() != null) {
+            orgDto = OrganizationMapper.toDto(userEntity.getOrganization());
+        }
+
+        LoginResponse resp = new LoginResponse(token, "Bearer", userDto, orgDto, roles, expired, !expired);
+        return ResponseEntity.ok(resp);
+    }
+
+    private String extractToken(String authorizationHeader, String tokenParam) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+        if (tokenParam != null && !tokenParam.isBlank()) {
+            return tokenParam;
+        }
+        return null;
     }
 }

@@ -45,6 +45,28 @@ public class JwtTokenProvider {
         }
     }
 
+    /**
+     * Validates a token while also exposing whether it is expired. This is primarily
+     * helpful for token introspection flows where we still want to read the claims of
+     * an expired token.
+     */
+    public boolean isExpired(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return false;
+        } catch (ExpiredJwtException ex) {
+            return true;
+        }
+    }
+
+    public Claims parseClaimsAllowExpired(String token) {
+        try {
+            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        } catch (ExpiredJwtException ex) {
+            return ex.getClaims();
+        }
+    }
+
     public String getUsername(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody().getSubject();
@@ -54,6 +76,15 @@ public class JwtTokenProvider {
     public List<String> getRoles(String token) {
         Object rolesObj = Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody().get("roles");
+        if (rolesObj instanceof List) {
+            return ((List<?>) rolesObj).stream().map(Object::toString).collect(Collectors.toList());
+        }
+        return List.of();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getRoles(Claims claims) {
+        Object rolesObj = claims.get("roles");
         if (rolesObj instanceof List) {
             return ((List<?>) rolesObj).stream().map(Object::toString).collect(Collectors.toList());
         }
