@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.AllocationQuotaDto;
+import ru.dstu.work.akselerator.dto.AllocationQuotasTableDto;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
 import ru.dstu.work.akselerator.mapper.AllocationQuotaMapper;
 import ru.dstu.work.akselerator.service.AllocationQuotaService;
@@ -48,6 +49,12 @@ public class AllocationQuotaController {
         Page<AllocationQuota> page = service.list(pageable);
         Page<AllocationQuotaDto> dtoPage = page.map(AllocationQuotaMapper::toDto);
         return ResponseEntity.ok(dtoPage);
+    }
+
+    @GetMapping("/table")
+    public ResponseEntity<AllocationQuotasTableDto> listTable(Pageable pageable) {
+        AllocationQuotasTableDto table = service.listAsTable(pageable);
+        return ResponseEntity.ok(table);
     }
 
 
