@@ -11,9 +11,12 @@ import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.AllocationQuotaDto;
 import ru.dstu.work.akselerator.dto.AllocationQuotasTableDto;
 import ru.dstu.work.akselerator.dto.AvailableSpeciesAndRegionsDto;
+import ru.dstu.work.akselerator.dto.QuotaUsageSummaryDto;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
 import ru.dstu.work.akselerator.mapper.AllocationQuotaMapper;
 import ru.dstu.work.akselerator.service.AllocationQuotaService;
+
+import java.util.List;
 
 /**
  * REST-контроллер для управления мини-квотами (AllocationQuota).
@@ -51,6 +54,12 @@ public class AllocationQuotaController {
         Page<AllocationQuota> page = service.list(pageable);
         Page<AllocationQuotaDto> dtoPage = page.map(AllocationQuotaMapper::toDto);
         return ResponseEntity.ok(dtoPage);
+    }
+
+    @GetMapping("/usage")
+    public ResponseEntity<List<QuotaUsageSummaryDto>> usage(@RequestParam(required = false) Long organizationId) {
+        List<QuotaUsageSummaryDto> usage = service.getQuotaUsageSummary(organizationId);
+        return ResponseEntity.ok(usage);
     }
 
     @GetMapping("/table")

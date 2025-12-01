@@ -95,10 +95,32 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
         var quotasPage = repository.findByOrganizationId(orgId, Pageable.unpaged());
         var quotas = quotasPage.getContent();
 
+        return mapUsageDtos(quotas);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<QuotaUsageSummaryDto> getQuotaUsageSummary(Long organizationId) {
+        Page<AllocationQuota> quotasPage;
+        if (organizationId != null) {
+            quotasPage = repository.findByOrganizationId(organizationId, Pageable.unpaged());
+        } else {
+            quotasPage = repository.findAll(Pageable.unpaged());
+        }
+
+        return mapUsageDtos(quotasPage.getContent());
+    }
+
+    private List<QuotaUsageSummaryDto> mapUsageDtos(List<AllocationQuota> quotas) {
         return quotas.stream()
                 .map(q -> {
                     QuotaUsageSummaryDto dto = new QuotaUsageSummaryDto();
                     dto.setQuotaId(q.getId());
+
+                    if (q.getOrganization() != null) {
+                        dto.setOrganizationId(q.getOrganization().getId());
+                        dto.setOrganizationName(q.getOrganization().getName());
+                    }
 
                     if (q.getSpecies() != null) {
                         dto.setSpeciesId(q.getSpecies().getId());
@@ -116,7 +138,6 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
                     dto.setPeriodEnd(q.getPeriodEnd());
                     dto.setLimitKg(q.getLimitKg());
 
-                    // считаем, сколько уже выловлено по этой квоте
                     BigDecimal used = BigDecimal.ZERO;
                     if (q.getOrganization() != null && q.getSpecies() != null && q.getRegion() != null) {
                         used = catchReportRepository.sumWeightBySpeciesRegionPeriodForOrg(

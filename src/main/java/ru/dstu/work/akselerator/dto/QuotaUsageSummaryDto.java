@@ -33,4 +33,8 @@ public class QuotaUsageSummaryDto {
     // Лимит и использовано
     private BigDecimal limitKg;
     private BigDecimal usedKg;
+
+    // Дополнительные сведения об организации для полноты ответа
+    private Long organizationId;
+    private String organizationName;
 }
