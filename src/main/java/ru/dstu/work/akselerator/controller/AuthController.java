@@ -6,6 +6,7 @@ import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -84,9 +85,18 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest rq) {
-        Authentication authentication = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(rq.getUsername(), rq.getPassword())
-        );
+        Authentication authentication;
+        try {
+            authentication = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(rq.getUsername(), rq.getPassword())
+            );
+        } catch (BadCredentialsException ex) {
+            LoginResponse errorResp = new LoginResponse(null, null, null, null, null, false, false);
+            errorResp.setValid(false);
+            errorResp.setMessage("Неверный логин или пароль");
+            errorResp.setError("invalid_credentials");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResp);
+        }
         var principal = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
         List<String> roles = principal.getAuthorities().stream()
                 .map(a -> a.getAuthority().replace("ROLE_", ""))

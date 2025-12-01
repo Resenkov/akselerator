@@ -29,6 +29,9 @@ public class LoginResponse {
      */
     private boolean valid = true;
 
+    private String error;
+    private String message;
+
     public LoginResponse() {
     }
 
