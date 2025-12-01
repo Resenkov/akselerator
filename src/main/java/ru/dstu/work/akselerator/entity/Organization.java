@@ -17,7 +17,7 @@ public class Organization extends Auditable {
     @Column(name = "name", length = 200, nullable = false)
     private String name;
 
-    @Column(name = "org_type", length = 20, nullable = false)
+    @Column(name = "org_type", length = 50, nullable = false)
     private String orgType;
 
     @Column(name = "inn", length = 12)

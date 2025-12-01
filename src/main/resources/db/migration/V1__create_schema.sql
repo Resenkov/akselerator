@@ -39,14 +39,14 @@ CREATE UNIQUE INDEX idx_fish_species_scientific ON fish_species (LOWER(scientifi
 CREATE TABLE organizations (
                                id          SERIAL PRIMARY KEY,
                                name        VARCHAR(200) NOT NULL,
-                               org_type    VARCHAR(20) NOT NULL CHECK (org_type IN ('COMPANY', 'GOVERNMENT')),
+                               org_type    VARCHAR(50) NOT NULL,
                                inn         VARCHAR(12) UNIQUE,
                                region_id   INTEGER REFERENCES fishing_regions(id) ON DELETE RESTRICT,
                                created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 COMMENT ON TABLE organizations IS 'Организации: рыбопромысловые компании и госорганы';
-COMMENT ON COLUMN organizations.org_type IS 'Тип: COMPANY или GOVERNMENT';
+COMMENT ON COLUMN organizations.org_type IS 'Тип организации (например, ООО, ИП, госорган и т.п.)';
 COMMENT ON COLUMN organizations.inn IS 'ИНН (заполняется только для COMPANY)';
 
 -- =============================================
@@ -92,7 +92,7 @@ CREATE TABLE user_roles (
 COMMENT ON TABLE user_roles IS 'Назначение ролей пользователям';
 
 -- =============================================
--- 7. Квоты (только для организаций типа COMPANY)
+-- 7. Квоты
 -- =============================================
 CREATE TABLE allocation_quotas (
                                    id            SERIAL PRIMARY KEY,
@@ -109,24 +109,6 @@ CREATE TABLE allocation_quotas (
 COMMENT ON TABLE allocation_quotas IS 'Выделенные квоты на период для конкретной компании';
 
 CREATE INDEX idx_quotas_lookup ON allocation_quotas (organization_id, species_id, region_id, period_start, period_end);
-
--- Триггер: квота только для COMPANY
-CREATE OR REPLACE FUNCTION enforce_quota_for_company()
-RETURNS TRIGGER AS $$
-DECLARE
-org_type organizations.org_type%TYPE;
-BEGIN
-SELECT o.org_type INTO org_type FROM organizations o WHERE o.id = NEW.organization_id;
-IF org_type IS NULL OR org_type != 'COMPANY' THEN
-        RAISE EXCEPTION 'Квоты могут назначаться только организациям типа COMPANY (org id: %)', NEW.organization_id;
-END IF;
-RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_quota_company_check
-    BEFORE INSERT OR UPDATE ON allocation_quotas
-                         FOR EACH ROW EXECUTE FUNCTION enforce_quota_for_company();
 
 -- =============================================
 -- 8. Отчёты об улове
@@ -192,10 +174,10 @@ INSERT INTO fish_species (scientific_name, common_name, is_endangered) VALUES
 
 -- Организации
 INSERT INTO organizations (name, org_type, inn, region_id) VALUES
-                                                               ('Рыболовецкая артель «Донская»', 'COMPANY', '123456789012', 1),
-                                                               ('ООО «Черноморский промысел»', 'COMPANY', '234567890123', 2),
-                                                               ('Управление Росрыболовства по ЮФО', 'GOVERNMENT', NULL, 1),
-                                                               ('Федеральный оператор FishLog', 'GOVERNMENT', NULL, 1);
+                                                               ('Рыболовецкая артель «Донская»', 'ООО', '123456789012', 1),
+                                                               ('ООО «Черноморский промысел»', 'ООО', '234567890123', 2),
+                                                               ('Управление Росрыболовства по ЮФО', 'Госорган', NULL, 1),
+                                                               ('Федеральный оператор FishLog', 'Госорган', NULL, 1);
 
 -- Роли
 INSERT INTO roles (name, description) VALUES
@@ -232,7 +214,7 @@ FROM (VALUES
           ('ООО «Черноморский промысел»', 'Engraulis encrasicolus', 8000.000),
           ('ООО «Черноморский промысел»', 'Psetta maxima', 1200.000)
      ) AS q (org_name, sci_name, limit_kg)
-         JOIN organizations o ON o.name = q.org_name AND o.org_type = 'COMPANY'
+         JOIN organizations o ON o.name = q.org_name
          JOIN fish_species fs ON fs.scientific_name = q.sci_name;
 
 -- Пример отчёта об улове
