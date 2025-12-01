@@ -7,10 +7,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.dstu.work.akselerator.dto.AllocationQuotaDto;
-import ru.dstu.work.akselerator.dto.AllocationQuotasTableDto;
+import ru.dstu.work.akselerator.dto.*;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
 import ru.dstu.work.akselerator.mapper.AllocationQuotaMapper;
+import ru.dstu.work.akselerator.repository.FishSpeciesRepository;
+import ru.dstu.work.akselerator.repository.FishingRegionRepository;
+import ru.dstu.work.akselerator.repository.OrganizationRepository;
 import ru.dstu.work.akselerator.service.AllocationQuotaService;
 
 /**
@@ -29,10 +31,15 @@ import ru.dstu.work.akselerator.service.AllocationQuotaService;
 public class AllocationQuotaController {
 
     private final AllocationQuotaService service;
-
+    private final FishSpeciesRepository fishSpeciesRepository;
+    private final FishingRegionRepository fishingRegionRepository;
+    private final OrganizationRepository organizationRepository;
     @Autowired
-    public AllocationQuotaController(AllocationQuotaService service) {
+    public AllocationQuotaController(AllocationQuotaService service, FishSpeciesRepository fishSpeciesRepository, FishingRegionRepository fishingRegionRepository, OrganizationRepository organizationRepository) {
         this.service = service;
+        this.fishSpeciesRepository = fishSpeciesRepository;
+        this.fishingRegionRepository = fishingRegionRepository;
+        this.organizationRepository = organizationRepository;
     }
 
     /**
@@ -108,6 +115,46 @@ public class AllocationQuotaController {
         entity.setId(id);
         AllocationQuota updated = service.update(entity);
         return ResponseEntity.ok(AllocationQuotaMapper.toDto(updated));
+    }
+
+    /**
+     * Метаданные для формы мини-квот:
+     * все виды рыб, все регионы и все организации (компании).
+     */
+    @GetMapping("/meta")
+    public ResponseEntity<AllocationQuotaMetaDto> getAllocationQuotaMeta() {
+        var species = fishSpeciesRepository.findAll().stream()
+                .map(s -> new SimpleFishSpeciesDto(
+                        s.getId(),
+                        s.getScientificName(),
+                        s.getCommonName(),
+                        s.isEndangered()
+                ))
+                .toList();
+
+        var regions = fishingRegionRepository.findAll().stream()
+                .map(r -> new SimpleFishingRegionDto(
+                        r.getId(),
+                        r.getCode(),
+                        r.getName()
+                ))
+                .toList();
+
+        var orgs = organizationRepository.findAll().stream()
+                .map(o -> new SimpleOrganizationDto(
+                        o.getId(),
+                        o.getName(),
+                        o.getOrgType(),
+                        o.getInn()
+                ))
+                .toList();
+
+        AllocationQuotaMetaDto dto = new AllocationQuotaMetaDto();
+        dto.setSpecies(species);
+        dto.setRegions(regions);
+        dto.setOrganizations(orgs);
+
+        return ResponseEntity.ok(dto);
     }
 
     /**

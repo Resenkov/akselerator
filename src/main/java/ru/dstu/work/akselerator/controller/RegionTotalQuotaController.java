@@ -5,9 +5,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import ru.dstu.work.akselerator.dto.RegionTotalQuotaDto;
-import ru.dstu.work.akselerator.dto.TableColumnDto;
-import ru.dstu.work.akselerator.dto.TableResponse;
+import ru.dstu.work.akselerator.dto.*;
+import ru.dstu.work.akselerator.repository.FishSpeciesRepository;
+import ru.dstu.work.akselerator.repository.FishingRegionRepository;
 import ru.dstu.work.akselerator.service.RegionTotalQuotaService;
 
 import java.util.List;
@@ -27,9 +27,12 @@ import java.util.List;
 public class RegionTotalQuotaController {
 
     private final RegionTotalQuotaService service;
-
-    public RegionTotalQuotaController(RegionTotalQuotaService service) {
+    private final FishSpeciesRepository fishSpeciesRepository;
+    private final FishingRegionRepository fishingRegionRepository;
+    public RegionTotalQuotaController(RegionTotalQuotaService service, FishSpeciesRepository fishSpeciesRepository, FishingRegionRepository fishingRegionRepository) {
         this.service = service;
+        this.fishSpeciesRepository = fishSpeciesRepository;
+        this.fishingRegionRepository = fishingRegionRepository;
     }
 
     /**
@@ -60,6 +63,37 @@ public class RegionTotalQuotaController {
         );
 
         return ResponseEntity.ok(new TableResponse<>(data, columns));
+    }
+
+
+    /**
+     * Метаданные для формы общей региональной квоты:
+     * список всех видов рыб и всех регионов.
+     */
+    @GetMapping("/meta")
+    public ResponseEntity<RegionQuotaMetaDto> getRegionQuotaMeta() {
+        List<SimpleFishSpeciesDto> species = fishSpeciesRepository.findAll().stream()
+                .map(s -> new SimpleFishSpeciesDto(
+                        s.getId(),
+                        s.getScientificName(),
+                        s.getCommonName(),
+                        s.isEndangered()
+                ))
+                .toList();
+
+        List<SimpleFishingRegionDto> regions = fishingRegionRepository.findAll().stream()
+                .map(r -> new SimpleFishingRegionDto(
+                        r.getId(),
+                        r.getCode(),
+                        r.getName()
+                ))
+                .toList();
+
+        RegionQuotaMetaDto dto = new RegionQuotaMetaDto();
+        dto.setSpecies(species);
+        dto.setRegions(regions);
+
+        return ResponseEntity.ok(dto);
     }
 
     /**
