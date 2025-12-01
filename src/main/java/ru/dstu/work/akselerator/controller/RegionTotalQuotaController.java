@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.RegionTotalQuotaDto;
+import ru.dstu.work.akselerator.dto.TableColumnDto;
+import ru.dstu.work.akselerator.dto.TableResponse;
 import ru.dstu.work.akselerator.service.RegionTotalQuotaService;
 
 import java.util.List;
@@ -42,8 +44,19 @@ public class RegionTotalQuotaController {
      * @return 200 OK со списком RegionTotalQuotaDto
      */
     @GetMapping
-    public ResponseEntity<List<RegionTotalQuotaDto>> list() {
-        return ResponseEntity.ok(service.list());
+    public ResponseEntity<TableResponse<RegionTotalQuotaDto>> list() {
+        List<RegionTotalQuotaDto> data = service.list();
+        List<TableColumnDto> columns = List.of(
+                new TableColumnDto("ID квоты", "id"),
+                new TableColumnDto("ID региона", "regionId"),
+                new TableColumnDto("Название региона", "regionName"),
+                new TableColumnDto("Код региона", "regionCode"),
+                new TableColumnDto("Дата начала", "periodStart"),
+                new TableColumnDto("Дата окончания", "periodEnd"),
+                new TableColumnDto("Лимит, кг", "limitKg")
+        );
+
+        return ResponseEntity.ok(new TableResponse<>(data, columns));
     }
 
     /**
