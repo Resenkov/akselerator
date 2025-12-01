@@ -11,6 +11,7 @@ public interface FishSpeciesService {
     FishSpecies create(FishSpecies entity);
     Optional<FishSpecies> getById(Long id);
     Page<FishSpecies> list(Pageable pageable);
+    List<FishSpecies> listAll();
     FishSpecies update(FishSpecies entity);
     void deleteById(Long id);
 }
