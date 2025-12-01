@@ -12,7 +12,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Entity
 @Table(name = "region_total_quotas",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"region_id","period_start","period_end"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"region_id","species_id","period_start","period_end"}))
 public class RegionTotalQuota {
 
     @Id
@@ -22,6 +22,10 @@ public class RegionTotalQuota {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "region_id", nullable = false)
     private FishingRegion region;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "species_id", nullable = false)
+    private FishSpecies species;
 
     @Column(name = "period_start", nullable = false)
     private LocalDate periodStart;

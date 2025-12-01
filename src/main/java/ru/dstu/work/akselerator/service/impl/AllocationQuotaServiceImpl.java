@@ -270,14 +270,15 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
 
     private void validateAgainstRegionTotal(AllocationQuota q, Long excludeId) {
         Long regionId = q.getRegion().getId();
+        Long speciesId = q.getSpecies().getId();
         List<RegionTotalQuota> totals = regionTotalQuotaRepository.findOverlapping(
-                regionId, q.getPeriodStart(), q.getPeriodEnd()
+                regionId, speciesId, q.getPeriodStart(), q.getPeriodEnd()
         );
         if (totals.isEmpty()) return;
 
         RegionTotalQuota rt = totals.get(0);
         BigDecimal already = repository.sumLimitKgByRegionOverlappingPeriod(
-                regionId, q.getPeriodStart(), q.getPeriodEnd(), excludeId
+                regionId, speciesId, q.getPeriodStart(), q.getPeriodEnd(), excludeId
         );
         if (already == null) already = BigDecimal.ZERO;
 

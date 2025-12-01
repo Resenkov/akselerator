@@ -51,6 +51,9 @@ public class RegionTotalQuotaController {
                 new TableColumnDto("ID региона", "regionId"),
                 new TableColumnDto("Название региона", "regionName"),
                 new TableColumnDto("Код региона", "regionCode"),
+                new TableColumnDto("ID вида рыбы", "speciesId"),
+                new TableColumnDto("Вид (обычное название)", "speciesCommonName"),
+                new TableColumnDto("Вид (латинское название)", "speciesScientificName"),
                 new TableColumnDto("Дата начала", "periodStart"),
                 new TableColumnDto("Дата окончания", "periodEnd"),
                 new TableColumnDto("Лимит, кг", "limitKg")
@@ -86,6 +89,7 @@ public class RegionTotalQuotaController {
      * POST /api/region-total-quotas
      * {
      *   "regionId": 1,
+     *   "speciesId": 1,
      *   "periodStart": "2025-01-01",
      *   "periodEnd": "2025-12-31",
      *   "limitKg": 100000.000

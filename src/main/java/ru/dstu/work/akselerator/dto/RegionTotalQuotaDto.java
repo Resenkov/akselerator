@@ -15,6 +15,9 @@ public class RegionTotalQuotaDto {
     @NotNull private Long regionId;
     private String regionName;
     private String regionCode;
+    @NotNull private Long speciesId;
+    private String speciesCommonName;
+    private String speciesScientificName;
     @NotNull private LocalDate periodStart;
     @NotNull private LocalDate periodEnd;
 
