@@ -41,7 +41,7 @@ CREATE TABLE organizations (
                                name        VARCHAR(200) NOT NULL,
                                org_type    VARCHAR(20) NOT NULL CHECK (org_type IN ('COMPANY', 'GOVERNMENT')),
                                inn         VARCHAR(12) UNIQUE,
-                               region_id   INTEGER NOT NULL REFERENCES fishing_regions(id) ON DELETE RESTRICT,
+                               region_id   INTEGER REFERENCES fishing_regions(id) ON DELETE RESTRICT,
                                created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
