@@ -36,9 +36,11 @@ public interface AllocationQuotaRepository extends JpaRepository<AllocationQuota
 
     @Query("SELECT COALESCE(SUM(a.limitKg), 0) FROM AllocationQuota a " +
             "WHERE a.region.id = :regionId " +
+            "AND a.species.id = :speciesId " +
             "AND NOT (a.periodEnd < :periodStart OR a.periodStart > :periodEnd) " +
             "AND (:excludeId IS NULL OR a.id <> :excludeId)")
     BigDecimal sumLimitKgByRegionOverlappingPeriod(@Param("regionId") Long regionId,
+                                                   @Param("speciesId") Long speciesId,
                                                    @Param("periodStart") LocalDate periodStart,
                                                    @Param("periodEnd") LocalDate periodEnd,
                                                    @Param("excludeId") Long excludeId);

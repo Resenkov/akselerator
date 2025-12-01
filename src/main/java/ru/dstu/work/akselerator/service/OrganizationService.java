@@ -11,6 +11,7 @@ public interface OrganizationService {
     Organization create(Organization entity);
     Optional<Organization> getById(Long id);
     Page<Organization> list(Pageable pageable);
+    List<Organization> listAll();
     Organization update(Organization entity);
     void deleteById(Long id);
 }

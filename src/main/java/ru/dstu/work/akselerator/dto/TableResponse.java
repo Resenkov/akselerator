@@ -5,11 +5,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TableColumnDto {
-    private String header;
-    private String accessorKey;
+public class TableResponse<T> {
+    private List<T> data;
+    private List<TableColumnDto> columns;
 }

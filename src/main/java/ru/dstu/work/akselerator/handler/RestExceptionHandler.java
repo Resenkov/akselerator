@@ -36,8 +36,34 @@ public class RestExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleIntegrity(DataIntegrityViolationException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("status", 400);
-        body.put("error", ex.getMessage());
+        body.put("error", "Data integrity violation");
+        String message = resolveIntegrityMessage(ex);
+        if (message != null) {
+            body.put("message", message);
+        }
         return ResponseEntity.badRequest().body(body);
+    }
+
+    private String resolveIntegrityMessage(DataIntegrityViolationException ex) {
+        Throwable root = ex;
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+        String rootMessage = root.getMessage();
+        if (rootMessage == null) {
+            return null;
+        }
+
+        if (rootMessage.contains("allocation_quotas_organization_id_species_id_region_id_peri_key")
+                || rootMessage.contains("uq_quota_org_species_region_period")) {
+            return "Квота с таким сочетанием организации, вида рыбы, региона и периода уже существует.";
+        }
+
+        if (rootMessage.contains("duplicate key value")) {
+            return "Запись с такими данными уже существует.";
+        }
+
+        return rootMessage;
     }
 
     @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})

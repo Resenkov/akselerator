@@ -3,14 +3,12 @@ package ru.dstu.work.akselerator.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.AllocationQuotaDto;
 import ru.dstu.work.akselerator.dto.AllocationQuotasTableDto;
-import ru.dstu.work.akselerator.dto.AvailableSpeciesAndRegionsDto;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
 import ru.dstu.work.akselerator.mapper.AllocationQuotaMapper;
 import ru.dstu.work.akselerator.service.AllocationQuotaService;
@@ -54,7 +52,7 @@ public class AllocationQuotaController {
     }
 
     @GetMapping("/table")
-    public ResponseEntity<AllocationQuotasTableDto> listAsTable(Pageable pageable) {
+    public ResponseEntity<AllocationQuotasTableDto> listTable(Pageable pageable) {
         AllocationQuotasTableDto table = service.listAsTable(pageable);
         return ResponseEntity.ok(table);
     }
@@ -72,50 +70,6 @@ public class AllocationQuotaController {
                 .map(AllocationQuotaMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    /**
-     * Вернуть массив видов рыб и массив регионов,
-     * доступных текущей организации по мини-квотам.
-     *
-     * Доступ: только FISHERMAN.
-     *
-     * Пример ответа:
-     * {
-     *   "species": [
-     *     { "id": 1, "commonName": "Судак", "scientificName": "Sander lucioperca" },
-     *     { "id": 2, "commonName": "Щука", "scientificName": "Esox lucius" }
-     *   ],
-     *   "regions": [
-     *     { "id": 1, "code": "R1", "name": "Северный бассейн" },
-     *     { "id": 3, "code": "R3", "name": "Каспийский бассейн" }
-     *   ]
-     * }
-     */
-    @PreAuthorize("hasRole('FISHERMAN')")
-    @GetMapping("/available-species-regions")
-    public ResponseEntity<AvailableSpeciesAndRegionsDto> getAvailableSpeciesAndRegions() {
-        AvailableSpeciesAndRegionsDto dto =
-                service.getAvailableSpeciesAndRegionsForCurrentOrg();
-        return ResponseEntity.ok(dto);
-    }
-
-    /**
-     * Создать новую мини-квоту.
-     *
-     * В рамках сервиса перед сохранением выполняется проверка,
-     * что сумма мини-квот по региону и пересекающимся периодам
-     * не превышает общий лимит региона (RegionTotalQuota).
-     * При нарушении бросается QuotaExceededException.
-     *
-     * @param dto данные новой мини-квоты (организация, вид, регион, период, лимит)
-     * @return 201 Created с созданной квотой
-     */
-    @PostMapping
-    public ResponseEntity<AllocationQuotaDto> create(@Validated @RequestBody AllocationQuotaDto dto) {
-        AllocationQuota entity = AllocationQuotaMapper.toEntity(dto);
-        AllocationQuota saved = service.create(entity);
-        return ResponseEntity.status(HttpStatus.CREATED).body(AllocationQuotaMapper.toDto(saved));
     }
 
     /**

@@ -17,14 +17,14 @@ public class Organization extends Auditable {
     @Column(name = "name", length = 200, nullable = false)
     private String name;
 
-    @Column(name = "org_type", length = 20, nullable = false)
+    @Column(name = "org_type", length = 50, nullable = false)
     private String orgType;
 
     @Column(name = "inn", length = 12)
     private String inn;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "region_id", nullable = false)
+    @JoinColumn(name = "region_id")
     private FishingRegion region;
 
     public Organization() {}

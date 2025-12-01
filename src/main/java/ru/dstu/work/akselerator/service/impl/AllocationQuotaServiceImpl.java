@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.dstu.work.akselerator.dto.*;
 import ru.dstu.work.akselerator.entity.*;
 import ru.dstu.work.akselerator.exception.QuotaExceededException;
+import ru.dstu.work.akselerator.mapper.AllocationQuotaMapper;
 import ru.dstu.work.akselerator.mapper.FishSpeciesMapper;
 import ru.dstu.work.akselerator.mapper.FishingRegionMapper;
 import ru.dstu.work.akselerator.repository.AllocationQuotaRepository;
@@ -80,6 +81,33 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
         return repository.findByOrganizationId(organizationId, pageable);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AllocationQuotaDto> findDtosByOrganizationWithUsage(Long organizationId, Pageable pageable) {
+        Page<AllocationQuota> page = repository.findByOrganizationId(organizationId, pageable);
+
+        return page.map(q -> {
+            AllocationQuotaDto dto = AllocationQuotaMapper.toDto(q);
+
+            BigDecimal used = BigDecimal.ZERO;
+            if (q.getSpecies() != null && q.getRegion() != null && q.getOrganization() != null) {
+                used = catchReportRepository.sumWeightBySpeciesRegionPeriodForOrg(
+                        q.getSpecies().getId(),
+                        q.getRegion().getId(),
+                        q.getOrganization().getId(),
+                        q.getPeriodStart(),
+                        q.getPeriodEnd()
+                );
+            }
+            if (used == null) {
+                used = BigDecimal.ZERO;
+            }
+            dto.setUsedKg(used);
+
+            return dto;
+        });
+    }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -95,10 +123,32 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
         var quotasPage = repository.findByOrganizationId(orgId, Pageable.unpaged());
         var quotas = quotasPage.getContent();
 
+        return mapUsageDtos(quotas);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<QuotaUsageSummaryDto> getQuotaUsageSummary(Long organizationId) {
+        Page<AllocationQuota> quotasPage;
+        if (organizationId != null) {
+            quotasPage = repository.findByOrganizationId(organizationId, Pageable.unpaged());
+        } else {
+            quotasPage = repository.findAll(Pageable.unpaged());
+        }
+
+        return mapUsageDtos(quotasPage.getContent());
+    }
+
+    private List<QuotaUsageSummaryDto> mapUsageDtos(List<AllocationQuota> quotas) {
         return quotas.stream()
                 .map(q -> {
                     QuotaUsageSummaryDto dto = new QuotaUsageSummaryDto();
                     dto.setQuotaId(q.getId());
+
+                    if (q.getOrganization() != null) {
+                        dto.setOrganizationId(q.getOrganization().getId());
+                        dto.setOrganizationName(q.getOrganization().getName());
+                    }
 
                     if (q.getSpecies() != null) {
                         dto.setSpeciesId(q.getSpecies().getId());
@@ -116,7 +166,6 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
                     dto.setPeriodEnd(q.getPeriodEnd());
                     dto.setLimitKg(q.getLimitKg());
 
-                    // считаем, сколько уже выловлено по этой квоте
                     BigDecimal used = BigDecimal.ZERO;
                     if (q.getOrganization() != null && q.getSpecies() != null && q.getRegion() != null) {
                         used = catchReportRepository.sumWeightBySpeciesRegionPeriodForOrg(
@@ -189,7 +238,16 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
     @Transactional(readOnly = true)
     public AllocationQuotasTableDto listAsTable(Pageable pageable) {
         Page<AllocationQuota> page = repository.findAll(pageable);
+        return buildTable(page);
+    }
 
+    @Override
+    public AllocationQuotasTableDto listAsTableForOrganization(Long organizationId, Pageable pageable) {
+        Page<AllocationQuota> page = repository.findByOrganizationId(organizationId, pageable);
+        return buildTable(page);
+    }
+
+    private AllocationQuotasTableDto buildTable(Page<AllocationQuota> page) {
         AllocationQuotasTableDto table = new AllocationQuotasTableDto();
 
         table.setColumns(List.of(
@@ -270,14 +328,15 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
 
     private void validateAgainstRegionTotal(AllocationQuota q, Long excludeId) {
         Long regionId = q.getRegion().getId();
+        Long speciesId = q.getSpecies().getId();
         List<RegionTotalQuota> totals = regionTotalQuotaRepository.findOverlapping(
-                regionId, q.getPeriodStart(), q.getPeriodEnd()
+                regionId, speciesId, q.getPeriodStart(), q.getPeriodEnd()
         );
         if (totals.isEmpty()) return;
 
         RegionTotalQuota rt = totals.get(0);
         BigDecimal already = repository.sumLimitKgByRegionOverlappingPeriod(
-                regionId, q.getPeriodStart(), q.getPeriodEnd(), excludeId
+                regionId, speciesId, q.getPeriodStart(), q.getPeriodEnd(), excludeId
         );
         if (already == null) already = BigDecimal.ZERO;
 

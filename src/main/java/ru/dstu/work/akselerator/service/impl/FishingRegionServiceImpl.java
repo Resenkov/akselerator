@@ -10,6 +10,7 @@ import ru.dstu.work.akselerator.repository.FishingRegionRepository;
 import ru.dstu.work.akselerator.service.FishingRegionService;
 
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class FishingRegionServiceImpl implements FishingRegionService {
@@ -36,6 +37,12 @@ public class FishingRegionServiceImpl implements FishingRegionService {
     @Transactional(readOnly = true)
     public Page<FishingRegion> list(Pageable pageable) {
         return repository.findAll(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FishingRegion> listAll() {
+        return repository.findAll();
     }
 
     @Override
