@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.dstu.work.akselerator.dto.*;
 import ru.dstu.work.akselerator.entity.*;
 import ru.dstu.work.akselerator.exception.QuotaExceededException;
+import ru.dstu.work.akselerator.mapper.AllocationQuotaMapper;
 import ru.dstu.work.akselerator.mapper.FishSpeciesMapper;
 import ru.dstu.work.akselerator.mapper.FishingRegionMapper;
 import ru.dstu.work.akselerator.repository.AllocationQuotaRepository;
@@ -78,6 +79,33 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
     @Transactional(readOnly = true)
     public Page<AllocationQuota> findByOrganizationId(Long organizationId, Pageable pageable) {
         return repository.findByOrganizationId(organizationId, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AllocationQuotaDto> findDtosByOrganizationWithUsage(Long organizationId, Pageable pageable) {
+        Page<AllocationQuota> page = repository.findByOrganizationId(organizationId, pageable);
+
+        return page.map(q -> {
+            AllocationQuotaDto dto = AllocationQuotaMapper.toDto(q);
+
+            BigDecimal used = BigDecimal.ZERO;
+            if (q.getSpecies() != null && q.getRegion() != null && q.getOrganization() != null) {
+                used = catchReportRepository.sumWeightBySpeciesRegionPeriodForOrg(
+                        q.getSpecies().getId(),
+                        q.getRegion().getId(),
+                        q.getOrganization().getId(),
+                        q.getPeriodStart(),
+                        q.getPeriodEnd()
+                );
+            }
+            if (used == null) {
+                used = BigDecimal.ZERO;
+            }
+            dto.setUsedKg(used);
+
+            return dto;
+        });
     }
 
 

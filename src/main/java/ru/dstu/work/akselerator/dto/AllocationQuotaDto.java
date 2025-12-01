@@ -30,6 +30,8 @@ public class AllocationQuotaDto {
     @NotNull
     private BigDecimal limitKg;
 
+    private BigDecimal usedKg;
+
     public AllocationQuotaDto() {}
 
     public Long getId() { return id; }
@@ -56,4 +58,6 @@ public class AllocationQuotaDto {
     public void setPeriodEnd(LocalDate periodEnd) { this.periodEnd = periodEnd; }
     public BigDecimal getLimitKg() { return limitKg; }
     public void setLimitKg(BigDecimal limitKg) { this.limitKg = limitKg; }
+    public BigDecimal getUsedKg() { return usedKg; }
+    public void setUsedKg(BigDecimal usedKg) { this.usedKg = usedKg; }
 }

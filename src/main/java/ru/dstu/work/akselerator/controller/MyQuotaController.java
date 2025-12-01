@@ -112,9 +112,8 @@ public class MyQuotaController {
         }
 
         Long orgId = current.getOrganization().getId();
-        Page<AllocationQuota> page = allocationQuotaService.findByOrganizationId(orgId, pageable);
-        Page<AllocationQuotaDto> dtoPage = page.map(AllocationQuotaMapper::toDto);
-        return ResponseEntity.ok(dtoPage);
+        Page<AllocationQuotaDto> page = allocationQuotaService.findDtosByOrganizationWithUsage(orgId, pageable);
+        return ResponseEntity.ok(page);
     }
 
     @PreAuthorize("hasRole('FISHERMAN')")
