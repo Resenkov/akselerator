@@ -24,7 +24,7 @@ public class Organization extends Auditable {
     private String inn;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "region_id", nullable = false)
+    @JoinColumn(name = "region_id")
     private FishingRegion region;
 
     public Organization() {}

@@ -13,6 +13,8 @@ public class RegionTotalQuotaDto {
     private Long id;
 
     @NotNull private Long regionId;
+    private String regionName;
+    private String regionCode;
     @NotNull private LocalDate periodStart;
     @NotNull private LocalDate periodEnd;
 

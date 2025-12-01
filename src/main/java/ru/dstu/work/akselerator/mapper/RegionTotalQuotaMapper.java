@@ -10,7 +10,11 @@ public class RegionTotalQuotaMapper {
         if (e == null) return null;
         RegionTotalQuotaDto d = new RegionTotalQuotaDto();
         d.setId(e.getId());
-        d.setRegionId(e.getRegion() != null ? e.getRegion().getId() : null);
+        if (e.getRegion() != null) {
+            d.setRegionId(e.getRegion().getId());
+            d.setRegionName(e.getRegion().getName());
+            d.setRegionCode(e.getRegion().getCode());
+        }
         d.setPeriodStart(e.getPeriodStart());
         d.setPeriodEnd(e.getPeriodEnd());
         d.setLimitKg(e.getLimitKg());

@@ -28,22 +28,19 @@ public class AuthController {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final OrganizationRepository organizationRepository;
-    private final FishingRegionRepository fishingRegionRepository;
 
     public AuthController(AuthenticationManager authManager,
                           PasswordEncoder passwordEncoder,
                           JwtTokenProvider tokenProvider,
                           UserRepository userRepository,
                           RoleRepository roleRepository,
-                          OrganizationRepository organizationRepository,
-                          FishingRegionRepository fishingRegionRepository) {
+                          OrganizationRepository organizationRepository) {
         this.authManager = authManager;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.organizationRepository = organizationRepository;
-        this.fishingRegionRepository = fishingRegionRepository;
     }
 
 
@@ -127,16 +124,12 @@ public class AuthController {
                     ));
         }
 
-        // 4. Дальше — как раньше: создаём регион, организацию, пользователя, выдаём токен
-
-        FishingRegion region = fishingRegionRepository.findById(rq.getRegionId())
-                .orElseThrow(() -> new IllegalArgumentException("Region not found"));
+        // 4. Дальше — как раньше: создаём организацию, пользователя, выдаём токен
 
         Organization org = new Organization();
         org.setName(rq.getOrgName());
         org.setOrgType(rq.getOrgType());
         org.setInn(rq.getInn());
-        org.setRegion(region);
 
         Organization savedOrg = organizationRepository.save(org);
 
