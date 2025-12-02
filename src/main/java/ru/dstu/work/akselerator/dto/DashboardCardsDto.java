@@ -4,12 +4,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Year;
 
 @Getter
 @Setter
 public class DashboardCardsDto {
-    private LocalDate date;
+    private Year year;
     private BigDecimal totalCatchKg;
     private Long companiesCount;
     private Long regionsCount;

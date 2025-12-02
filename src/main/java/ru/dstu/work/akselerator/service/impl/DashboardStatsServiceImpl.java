@@ -10,7 +10,7 @@ import ru.dstu.work.akselerator.service.DashboardStatsService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
+import java.time.Year;
 
 @Service
 public class DashboardStatsServiceImpl implements DashboardStatsService {
@@ -29,10 +29,10 @@ public class DashboardStatsServiceImpl implements DashboardStatsService {
 
     @Override
     @Transactional(readOnly = true)
-    public DashboardCardsDto getCardsStats(LocalDate date) {
-        LocalDate targetDate = date != null ? date : LocalDate.now();
+    public DashboardCardsDto getCardsStats(Year year) {
+        Year targetYear = year != null ? year : Year.now();
 
-        BigDecimal totalCatch = catchReportRepository.sumWeightByDate(targetDate);
+        BigDecimal totalCatch = catchReportRepository.sumWeightByYear(targetYear);
         if (totalCatch == null) {
             totalCatch = BigDecimal.ZERO;
         }
@@ -46,7 +46,7 @@ public class DashboardStatsServiceImpl implements DashboardStatsService {
         }
 
         DashboardCardsDto dto = new DashboardCardsDto();
-        dto.setDate(targetDate);
+        dto.setYear(targetYear);
         dto.setTotalCatchKg(totalCatch);
         dto.setCompaniesCount(companies);
         dto.setRegionsCount(regions);

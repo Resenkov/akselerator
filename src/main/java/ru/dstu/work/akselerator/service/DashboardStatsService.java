@@ -2,8 +2,8 @@ package ru.dstu.work.akselerator.service;
 
 import ru.dstu.work.akselerator.dto.DashboardCardsDto;
 
-import java.time.LocalDate;
+import java.time.Year;
 
 public interface DashboardStatsService {
-    DashboardCardsDto getCardsStats(LocalDate date);
+    DashboardCardsDto getCardsStats(Year year);
 }

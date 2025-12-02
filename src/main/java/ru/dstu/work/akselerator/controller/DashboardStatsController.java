@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.dstu.work.akselerator.dto.DashboardCardsDto;
 import ru.dstu.work.akselerator.service.DashboardStatsService;
 
-import java.time.LocalDate;
+import java.time.Year;
 
 @RestController
 @RequestMapping("/api/dashboard")
@@ -21,8 +21,8 @@ public class DashboardStatsController {
     }
 
     @GetMapping("/cards")
-    public ResponseEntity<DashboardCardsDto> getCardsStats(@RequestParam(value = "date", required = false) LocalDate date) {
-        DashboardCardsDto stats = dashboardStatsService.getCardsStats(date);
+    public ResponseEntity<DashboardCardsDto> getCardsStats(@RequestParam(value = "year", required = false) Year year) {
+        DashboardCardsDto stats = dashboardStatsService.getCardsStats(year);
         return ResponseEntity.ok(stats);
     }
 }
