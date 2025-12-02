@@ -10,6 +10,7 @@ import ru.dstu.work.akselerator.entity.CatchReport;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Year;
 
 @Repository
 public interface CatchReportRepository extends JpaRepository<CatchReport, Long> {
@@ -42,6 +43,15 @@ public interface CatchReportRepository extends JpaRepository<CatchReport, Long> 
     );
 
 
+    @Query(
+            value = """
+            SELECT COALESCE(SUM(c.weight_kg), 0)
+            FROM catch_reports c
+            WHERE EXTRACT(YEAR FROM c.fishing_date) = :year
+            """,
+            nativeQuery = true
+    )
+    BigDecimal sumWeightByYear(@Param("year") Year year);
 
     long countByOrganizationId(Long organizationId);
 
