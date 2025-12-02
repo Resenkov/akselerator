@@ -121,6 +121,7 @@ public class AllocationQuotaController {
      * Метаданные для формы мини-квот:
      * все виды рыб, все регионы и все организации (компании).
      */
+    @PreAuthorize("hasRole('FISHERMAN')")
     @GetMapping("/meta")
     public ResponseEntity<AllocationQuotaMetaDto> getAllocationQuotaMeta() {
         var species = fishSpeciesRepository.findAll().stream()

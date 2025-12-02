@@ -70,6 +70,7 @@ public class RegionTotalQuotaController {
      * Метаданные для формы общей региональной квоты:
      * список всех видов рыб и всех регионов.
      */
+    @PreAuthorize("hasRole('FISHERMAN')")
     @GetMapping("/meta")
     public ResponseEntity<RegionQuotaMetaDto> getRegionQuotaMeta() {
         List<SimpleFishSpeciesDto> species = fishSpeciesRepository.findAll().stream()
