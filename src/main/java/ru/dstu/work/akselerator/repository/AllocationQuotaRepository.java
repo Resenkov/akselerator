@@ -58,4 +58,7 @@ public interface AllocationQuotaRepository extends JpaRepository<AllocationQuota
      */
     @Query("SELECT DISTINCT q.region FROM AllocationQuota q WHERE q.organization.id = :orgId")
     java.util.List<FishingRegion> findDistinctRegionsByOrganizationId(@Param("orgId") Long orgId);
+
+    @Query("SELECT q FROM AllocationQuota q WHERE q.periodStart <= :end AND q.periodEnd >= :start")
+    Page<AllocationQuota> findByYear(@Param("start") LocalDate start, @Param("end") LocalDate end, Pageable pageable);
 }

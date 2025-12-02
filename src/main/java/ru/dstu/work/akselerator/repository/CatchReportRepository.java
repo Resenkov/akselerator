@@ -42,6 +42,13 @@ public interface CatchReportRepository extends JpaRepository<CatchReport, Long> 
     );
 
 
+    @Query("SELECT COALESCE(SUM(c.weightKg), 0) FROM CatchReport c " +
+            "WHERE c.fishingDate = :date " +
+            "AND c.verified = true")
+    BigDecimal sumWeightByDate(@Param("date") LocalDate date);
+
+
+
 
     long countByOrganizationId(Long organizationId);
 
