@@ -85,12 +85,14 @@ public class MyQuotaController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        // 3. Основная логика
         AllocationQuota entity = AllocationQuotaMapper.toEntity(dto);
         entity.setOrganization(current.getOrganization());
 
         AllocationQuota saved = allocationQuotaService.create(entity);
-        return ResponseEntity.status(HttpStatus.CREATED).body(AllocationQuotaMapper.toDto(saved));
+
+        AllocationQuotaDto result = allocationQuotaService.getDtoWithUsage(saved.getId());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
 

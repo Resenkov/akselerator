@@ -23,6 +23,9 @@ public interface AllocationQuotaService {
     Page<AllocationQuotaDto> findDtosByOrganizationWithUsage(Long organizationId, Pageable pageable);
     List<QuotaUsageSummaryDto> getMyQuotaUsageSummary();
     List<QuotaUsageSummaryDto> getQuotaUsageSummary(Long organizationId);
+    AllocationQuotaDto getDtoWithUsage(Long id);
+    Page<AllocationQuotaDto> listDtosWithUsage(Pageable pageable);
+    Page<AllocationQuotaDto> listDtosWithUsageByOrganization(Long orgId, Pageable pageable);
 
     List<AllocationQuota> findActiveFor(Long organizationId, Long speciesId, Long regionId, LocalDate date);
     AvailableSpeciesAndRegionsDto getAvailableSpeciesAndRegionsForCurrentOrg();

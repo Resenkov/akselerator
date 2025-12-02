@@ -43,6 +43,61 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
         this.catchReportRepository = catchReportRepository;
     }
 
+
+    private AllocationQuotaDto toDtoWithUsage(AllocationQuota q) {
+        AllocationQuotaDto dto = AllocationQuotaMapper.toDto(q);
+        dto.setUsedKg(calculateUsedKg(q));
+        return dto;
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public AllocationQuotaDto getDtoWithUsage(Long id) {
+        AllocationQuota q = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Quota not found: id=" + id));
+
+        return enrichDtoWithUsage(q);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AllocationQuotaDto> listDtosWithUsage(Pageable pageable) {
+        Page<AllocationQuota> page = repository.findAll(pageable);
+        return page.map(this::enrichDtoWithUsage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AllocationQuotaDto> listDtosWithUsageByOrganization(Long orgId, Pageable pageable) {
+        Page<AllocationQuota> page = repository.findByOrganizationId(orgId, pageable);
+        return page.map(this::enrichDtoWithUsage);
+    }
+
+    private BigDecimal calculateUsedKg(AllocationQuota q) {
+        if (q == null || q.getOrganization() == null
+                || q.getSpecies() == null || q.getRegion() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal used = catchReportRepository.sumWeightBySpeciesRegionPeriodForOrg(
+                q.getSpecies().getId(),
+                q.getRegion().getId(),
+                q.getOrganization().getId(),
+                q.getPeriodStart(),
+                q.getPeriodEnd()
+        );
+        return used != null ? used : BigDecimal.ZERO;
+    }
+
+    private AllocationQuotaDto enrichDtoWithUsage(AllocationQuota q) {
+        AllocationQuotaDto dto = AllocationQuotaMapper.toDto(q);
+        dto.setUsedKg(calculateUsedKg(q));
+        return dto;
+    }
+
+
+
     @Override
     @Transactional
     public AllocationQuota create(AllocationQuota quota) {
@@ -85,28 +140,9 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
     @Transactional(readOnly = true)
     public Page<AllocationQuotaDto> findDtosByOrganizationWithUsage(Long organizationId, Pageable pageable) {
         Page<AllocationQuota> page = repository.findByOrganizationId(organizationId, pageable);
-
-        return page.map(q -> {
-            AllocationQuotaDto dto = AllocationQuotaMapper.toDto(q);
-
-            BigDecimal used = BigDecimal.ZERO;
-            if (q.getSpecies() != null && q.getRegion() != null && q.getOrganization() != null) {
-                used = catchReportRepository.sumWeightBySpeciesRegionPeriodForOrg(
-                        q.getSpecies().getId(),
-                        q.getRegion().getId(),
-                        q.getOrganization().getId(),
-                        q.getPeriodStart(),
-                        q.getPeriodEnd()
-                );
-            }
-            if (used == null) {
-                used = BigDecimal.ZERO;
-            }
-            dto.setUsedKg(used);
-
-            return dto;
-        });
+        return page.map(this::enrichDtoWithUsage);
     }
+
 
 
     @Override
@@ -292,22 +328,7 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
                     row.setPeriodStart(q.getPeriodStart());
                     row.setPeriodEnd(q.getPeriodEnd());
                     row.setLimitKg(q.getLimitKg());
-
-                    // === НОВОЕ: считаем пойманное по этой квоте ===
-                    BigDecimal used = BigDecimal.ZERO;
-                    if (q.getOrganization() != null && q.getSpecies() != null && q.getRegion() != null) {
-                        used = catchReportRepository.sumWeightBySpeciesRegionPeriodForOrg(
-                                q.getSpecies().getId(),
-                                q.getRegion().getId(),
-                                q.getOrganization().getId(),
-                                q.getPeriodStart(),
-                                q.getPeriodEnd()
-                        );
-                    }
-                    if (used == null) {
-                        used = BigDecimal.ZERO;
-                    }
-                    row.setUsedKg(used);
+                    row.setUsedKg(calculateUsedKg(q));
 
                     return row;
                 })

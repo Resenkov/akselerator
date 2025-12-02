@@ -53,8 +53,7 @@ public class AllocationQuotaController {
      */
     @GetMapping
     public ResponseEntity<Page<AllocationQuotaDto>> list(Pageable pageable) {
-        Page<AllocationQuota> page = service.list(pageable);
-        Page<AllocationQuotaDto> dtoPage = page.map(AllocationQuotaMapper::toDto);
+        Page<AllocationQuotaDto> dtoPage = service.listDtosWithUsage(pageable);
         return ResponseEntity.ok(dtoPage);
     }
 
@@ -73,10 +72,7 @@ public class AllocationQuotaController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<AllocationQuotaDto> get(@PathVariable Long id) {
-        return service.getById(id)
-                .map(AllocationQuotaMapper::toDto)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.ok(service.getDtoWithUsage(id));
     }
 
     /**
@@ -92,8 +88,7 @@ public class AllocationQuotaController {
     @GetMapping("/organizations/{id}")
     public ResponseEntity<Page<AllocationQuotaDto>> findByOrganizationId(@PathVariable Long id,
                                                                          Pageable pageable) {
-        Page<AllocationQuota> page = service.findByOrganizationId(id, pageable);
-        Page<AllocationQuotaDto> dtoPage = page.map(AllocationQuotaMapper::toDto);
+        Page<AllocationQuotaDto> dtoPage = service.listDtosWithUsageByOrganization(id, pageable);
         return ResponseEntity.ok(dtoPage);
     }
 
@@ -114,8 +109,10 @@ public class AllocationQuotaController {
         AllocationQuota entity = AllocationQuotaMapper.toEntity(dto);
         entity.setId(id);
         AllocationQuota updated = service.update(entity);
-        return ResponseEntity.ok(AllocationQuotaMapper.toDto(updated));
+        AllocationQuotaDto result = service.getDtoWithUsage(updated.getId());
+        return ResponseEntity.ok(result);
     }
+
 
     /**
      * Метаданные для формы мини-квот:
