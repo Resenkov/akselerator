@@ -22,7 +22,6 @@ public interface CatchReportRepository extends JpaRepository<CatchReport, Long> 
     @Query("SELECT COALESCE(SUM(c.weightKg), 0) FROM CatchReport c " +
             "WHERE c.species.id = :speciesId " +
             "AND c.region.id = :regionId " +
-            "AND c.verified = true " +
             "AND c.fishingDate BETWEEN :start AND :end")
     BigDecimal sumWeightBySpeciesRegionAndPeriod(
             @Param("speciesId") Long speciesId,
