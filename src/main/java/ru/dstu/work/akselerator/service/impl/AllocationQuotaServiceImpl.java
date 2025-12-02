@@ -329,28 +329,72 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
     private void validateAgainstRegionTotal(AllocationQuota q, Long excludeId) {
         Long regionId = q.getRegion().getId();
         Long speciesId = q.getSpecies().getId();
-        List<RegionTotalQuota> totals = regionTotalQuotaRepository.findOverlapping(
+
+        // 0. sanity check по датам
+        if (q.getPeriodEnd().isBefore(q.getPeriodStart())) {
+            throw new IllegalArgumentException("Конец периода мини-квоты не может быть раньше начала");
+        }
+
+        // 1. Находим региональные квоты, пересекающиеся по датам
+        var overlappingTotals = regionTotalQuotaRepository.findOverlapping(
                 regionId, speciesId, q.getPeriodStart(), q.getPeriodEnd()
         );
-        if (totals.isEmpty()) return;
 
-        RegionTotalQuota rt = totals.get(0);
+        if (overlappingTotals.isEmpty()) {
+            // нет вообще никакой региональной квоты для этого вида/региона и периода
+            WarningInfo w = new WarningInfo();
+            w.setLevel("ERROR");
+            w.setMessage("Для указанного региона и вида рыбы не задана общая региональная квота " +
+                    "или период мини-квоты полностью выходит за рамки региональной квоты.");
+            w.setQuotaLimitKg(BigDecimal.ZERO);
+            w.setUsedKg(q.getLimitKg());
+            w.setRemainingKg(BigDecimal.ZERO);
+            throw new QuotaExceededException(w);
+        }
+
+        // 2. Берём региональную квоту, которая ПОЛНОСТЬЮ покрывает период мини-квоты
+        RegionTotalQuota rt = overlappingTotals.stream()
+                .filter(r -> !r.getPeriodStart().isAfter(q.getPeriodStart())   // r.start <= q.start
+                        && !r.getPeriodEnd().isBefore(q.getPeriodEnd()))    // r.end   >= q.end
+                .findFirst()
+                .orElseThrow(() -> {
+                    WarningInfo w = new WarningInfo();
+                    w.setLevel("ERROR");
+                    w.setMessage("Период мини-квоты должен полностью находиться внутри периода общей " +
+                            "региональной квоты.");
+                    w.setQuotaLimitKg(BigDecimal.ZERO);
+                    w.setUsedKg(q.getLimitKg());
+                    w.setRemainingKg(BigDecimal.ZERO);
+                    return new QuotaExceededException(w);
+                });
+
+        // 3. Считаем, сколько уже выдано мини-квот по этому региону/виду в рамках региональной квоты
         BigDecimal already = repository.sumLimitKgByRegionOverlappingPeriod(
-                regionId, speciesId, q.getPeriodStart(), q.getPeriodEnd(), excludeId
+                regionId,
+                speciesId,
+                rt.getPeriodStart(),
+                rt.getPeriodEnd(),
+                excludeId
         );
-        if (already == null) already = BigDecimal.ZERO;
+        if (already == null) {
+            already = BigDecimal.ZERO;
+        }
 
         BigDecimal used = already.add(q.getLimitKg());
+
+        // 4. Проверяем, что сумма мини-квот (включая текущую) не превышает региональный лимит
         if (used.compareTo(rt.getLimitKg()) > 0) {
             WarningInfo w = new WarningInfo();
             w.setLevel("ERROR");
-            w.setMessage("Сумма мини-квот по региону превышает общий лимит региона");
+            w.setMessage("Сумма мини-квот по региону и виду рыбы превышает общий лимит региональной квоты.");
             w.setQuotaLimitKg(rt.getLimitKg());
             w.setUsedKg(used);
             w.setRemainingKg(rt.getLimitKg().subtract(used));
             if (rt.getLimitKg().signum() > 0) {
-                w.setPercentUsed(used.multiply(BigDecimal.valueOf(100))
-                        .divide(rt.getLimitKg(), 4, RoundingMode.HALF_UP));
+                w.setPercentUsed(
+                        used.multiply(BigDecimal.valueOf(100))
+                                .divide(rt.getLimitKg(), 4, RoundingMode.HALF_UP)
+                );
             }
             throw new QuotaExceededException(w);
         }

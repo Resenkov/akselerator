@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ru.dstu.work.akselerator.dto.AllocationQuotaDto;
@@ -83,12 +85,14 @@ public class MyQuotaController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
+        // 3. Основная логика
         AllocationQuota entity = AllocationQuotaMapper.toEntity(dto);
         entity.setOrganization(current.getOrganization());
 
         AllocationQuota saved = allocationQuotaService.create(entity);
         return ResponseEntity.status(HttpStatus.CREATED).body(AllocationQuotaMapper.toDto(saved));
     }
+
 
     /**
      * Получить все мини-квоты (AllocationQuota) для организации текущего пользователя.
@@ -131,6 +135,7 @@ public class MyQuotaController {
         AllocationQuotasTableDto table = allocationQuotaService.listAsTableForOrganization(current.getOrganization().getId(), pageable);
         return ResponseEntity.ok(table);
     }
+
 
     /**
      * Сводка по всем мини-квотам текущей организации:
