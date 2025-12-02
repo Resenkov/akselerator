@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ru.dstu.work.akselerator.dto.*;
 import ru.dstu.work.akselerator.entity.CatchReport;
+import ru.dstu.work.akselerator.dto.CatchFormMetaDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +24,7 @@ public interface CatchReportService {
     Page<CatchReport> findMyReports(Pageable pageable);
     LastCatchesTableDto getLast3TableForCurrentOrganization();
     CatchReportsTableDto findByOrganizationAsTable(Long organizationId, Pageable pageable);
-
+    CatchFormMetaDto getCatchFormMetaForCurrentOrganization();
     Page<CatchReport> findPending(Pageable pageable);
 
 }

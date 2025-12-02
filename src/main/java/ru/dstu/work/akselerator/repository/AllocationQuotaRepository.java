@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.dstu.work.akselerator.entity.AllocationQuota;
+import ru.dstu.work.akselerator.entity.FishSpecies;
+import ru.dstu.work.akselerator.entity.FishingRegion;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -44,4 +46,16 @@ public interface AllocationQuotaRepository extends JpaRepository<AllocationQuota
                                                    @Param("periodStart") LocalDate periodStart,
                                                    @Param("periodEnd") LocalDate periodEnd,
                                                    @Param("excludeId") Long excludeId);
+
+    /**
+     * Все уникальные виды рыбы, по которым у организации есть мини-квоты.
+     */
+    @Query("SELECT DISTINCT q.species FROM AllocationQuota q WHERE q.organization.id = :orgId")
+    java.util.List<FishSpecies> findDistinctSpeciesByOrganizationId(@Param("orgId") Long orgId);
+
+    /**
+     * Все уникальные регионы, по которым у организации есть мини-квоты.
+     */
+    @Query("SELECT DISTINCT q.region FROM AllocationQuota q WHERE q.organization.id = :orgId")
+    java.util.List<FishingRegion> findDistinctRegionsByOrganizationId(@Param("orgId") Long orgId);
 }

@@ -165,6 +165,19 @@ public class CatchReportController {
     }
 
     /**
+     * Мета-данные для формы ввода улова для текущей компании (роль FISHERMAN):
+     * возвращает только те виды рыбы и регионы, по которым у компании есть мини-квоты.
+     *
+     * GET /api/catch-reports/my/form-meta
+     */
+    @PreAuthorize("hasRole('FISHERMAN')")
+    @GetMapping("/my/form-meta")
+    public ResponseEntity<CatchFormMetaDto> getMyCatchFormMeta() {
+        CatchFormMetaDto meta = service.getCatchFormMetaForCurrentOrganization();
+        return ResponseEntity.ok(meta);
+    }
+
+    /**
      * Удаление отчёта — только админ.
      */
     @PreAuthorize("hasRole('ADMIN')")

@@ -9,9 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.dstu.work.akselerator.dto.*;
-import ru.dstu.work.akselerator.entity.AllocationQuota;
-import ru.dstu.work.akselerator.entity.CatchReport;
-import ru.dstu.work.akselerator.entity.User;
+import ru.dstu.work.akselerator.entity.*;
 import ru.dstu.work.akselerator.mapper.CatchReportMapper;
 import ru.dstu.work.akselerator.repository.AllocationQuotaRepository;
 import ru.dstu.work.akselerator.repository.CatchReportRepository;
@@ -262,6 +260,57 @@ public class CatchReportServiceImpl implements CatchReportService {
 
         table.setData(rows);
         return table;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CatchFormMetaDto getCatchFormMetaForCurrentOrganization() {
+        User current = getCurrentUser();
+
+        CatchFormMetaDto meta = new CatchFormMetaDto();
+
+        // Если у юзера нет организации — просто пустые списки
+        if (current.getOrganization() == null) {
+            meta.setSpecies(java.util.List.of());
+            meta.setRegions(java.util.List.of());
+            return meta;
+        }
+
+        Long orgId = current.getOrganization().getId();
+
+        // Достаём из мини-квот все уникальные виды рыбы и регионы
+        java.util.List<FishSpecies> speciesEntities =
+                allocationQuotaRepository.findDistinctSpeciesByOrganizationId(orgId);
+
+        java.util.List<FishingRegion> regionEntities =
+                allocationQuotaRepository.findDistinctRegionsByOrganizationId(orgId);
+
+        // Маппим в DTO вручную
+        java.util.List<CatchFormSpeciesDto> speciesDtos = speciesEntities.stream()
+                .map(s -> {
+                    CatchFormSpeciesDto dto = new CatchFormSpeciesDto();
+                    dto.setId(s.getId());
+                    dto.setScientificName(s.getScientificName());
+                    dto.setCommonName(s.getCommonName());
+                    dto.setEndangered(s.isEndangered());
+                    return dto;
+                })
+                .toList();
+
+        java.util.List<CatchFormRegionDto> regionDtos = regionEntities.stream()
+                .map(r -> {
+                    CatchFormRegionDto dto = new CatchFormRegionDto();
+                    dto.setId(r.getId());
+                    dto.setCode(r.getCode());
+                    dto.setName(r.getName());
+                    return dto;
+                })
+                .toList();
+
+        meta.setSpecies(speciesDtos);
+        meta.setRegions(regionDtos);
+
+        return meta;
     }
 
     private CatchReportTableRowDto mapToTableRow(CatchReport c) {
