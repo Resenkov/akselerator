@@ -75,7 +75,7 @@ public class MyQuotaController {
         return ResponseEntity.ok(dto);
     }
 
-    @PreAuthorize("hasRole('FISHERMAN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/allocation")
     public ResponseEntity<AllocationQuotaDto> createForMyOrganization(@RequestBody AllocationQuotaDto dto) {
         User current = getCurrentUser();
@@ -116,7 +116,7 @@ public class MyQuotaController {
         return ResponseEntity.ok(page);
     }
 
-    @PreAuthorize("hasRole('FISHERMAN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/allocation/table")
     public ResponseEntity<AllocationQuotasTableDto> myAllocationQuotasTable(Pageable pageable) {
         User current = getCurrentUser();
