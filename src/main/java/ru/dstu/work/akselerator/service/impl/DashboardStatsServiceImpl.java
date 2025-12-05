@@ -30,11 +30,38 @@ public class DashboardStatsServiceImpl implements DashboardStatsService {
     @Override
     @Transactional(readOnly = true)
     public DashboardCardsDto getCardsStats(Year year) {
-        Year targetYear = year != null ? year : Year.now();
+        Year targetYear = (year != null) ? year : Year.now();
 
-        BigDecimal totalCatch = catchReportRepository.sumWeightByYear(targetYear);
-        return buildCardsDto(totalCatch, targetYear);
+        java.time.LocalDate start = targetYear.atDay(1);
+        java.time.LocalDate end = targetYear.atMonth(12).atEndOfMonth();
+
+        BigDecimal totalCatch = catchReportRepository.sumWeightByYear(start, end);
+        if (totalCatch == null) {
+            totalCatch = BigDecimal.ZERO;
+        }
+
+        long companies = organizationRepository.count();
+        long regions = fishingRegionRepository.count();
+
+        BigDecimal average = BigDecimal.ZERO;
+        if (companies > 0) {
+            average = totalCatch.divide(
+                    BigDecimal.valueOf(companies),
+                    3,
+                    RoundingMode.HALF_UP
+            );
+        }
+
+        DashboardCardsDto dto = new DashboardCardsDto();
+        dto.setYear(targetYear);
+        dto.setTotalCatchKg(totalCatch);
+        dto.setCompaniesCount(companies);
+        dto.setRegionsCount(regions);
+        dto.setAverageCatchKg(average);
+
+        return dto;
     }
+
 
     @Override
     @Transactional(readOnly = true)
