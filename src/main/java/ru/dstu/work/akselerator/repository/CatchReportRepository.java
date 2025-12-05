@@ -42,12 +42,15 @@ public interface CatchReportRepository extends JpaRepository<CatchReport, Long> 
     );
 
 
-    @Query("SELECT COALESCE(SUM(c.weightKg), 0) FROM CatchReport c " +
-            "WHERE FUNCTION('YEAR', c.fishingDate) = :year")
-    BigDecimal sumWeightByYear(@Param("year") Year year);
-
-
-
+    @Query("""
+       SELECT COALESCE(SUM(c.weightKg), 0)
+       FROM CatchReport c
+       WHERE c.fishingDate BETWEEN :start AND :end
+       """)
+    BigDecimal sumWeightByYear(
+            @Param("start") java.time.LocalDate start,
+            @Param("end") java.time.LocalDate end
+    );
 
     long countByOrganizationId(Long organizationId);
 
