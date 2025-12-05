@@ -10,6 +10,7 @@ import ru.dstu.work.akselerator.entity.CatchReport;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Year;
 
 @Repository
 public interface CatchReportRepository extends JpaRepository<CatchReport, Long> {
@@ -21,7 +22,6 @@ public interface CatchReportRepository extends JpaRepository<CatchReport, Long> 
     @Query("SELECT COALESCE(SUM(c.weightKg), 0) FROM CatchReport c " +
             "WHERE c.species.id = :speciesId " +
             "AND c.region.id = :regionId " +
-            "AND c.verified = true " +
             "AND c.fishingDate BETWEEN :start AND :end")
     BigDecimal sumWeightBySpeciesRegionAndPeriod(
             @Param("speciesId") Long speciesId,
@@ -40,6 +40,12 @@ public interface CatchReportRepository extends JpaRepository<CatchReport, Long> 
             @Param("start") LocalDate start,
             @Param("end") LocalDate end
     );
+
+
+    @Query("SELECT COALESCE(SUM(c.weightKg), 0) FROM CatchReport c " +
+            "WHERE FUNCTION('YEAR', c.fishingDate) = :year")
+    BigDecimal sumWeightByYear(@Param("year") Year year);
+
 
 
 

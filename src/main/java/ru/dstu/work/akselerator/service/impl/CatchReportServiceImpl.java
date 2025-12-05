@@ -69,12 +69,23 @@ public class CatchReportServiceImpl implements CatchReportService {
             return null;
         }
 
-        BigDecimal usedBefore = repository.sumWeightBySpeciesRegionAndPeriod(
-                entity.getSpecies().getId(),
-                entity.getRegion().getId(),
-                quota.getPeriodStart(),
-                quota.getPeriodEnd()
-        );
+        BigDecimal usedBefore;
+        if (quota.getOrganization() != null) {
+            usedBefore = repository.sumWeightBySpeciesRegionPeriodForOrg(
+                    entity.getSpecies().getId(),
+                    entity.getRegion().getId(),
+                    quota.getOrganization().getId(),
+                    quota.getPeriodStart(),
+                    quota.getPeriodEnd()
+            );
+        } else {
+            usedBefore = repository.sumWeightBySpeciesRegionAndPeriod(
+                    entity.getSpecies().getId(),
+                    entity.getRegion().getId(),
+                    quota.getPeriodStart(),
+                    quota.getPeriodEnd()
+            );
+        }
         if (usedBefore == null) usedBefore = BigDecimal.ZERO;
 
         BigDecimal limit = quota.getLimitKg();
