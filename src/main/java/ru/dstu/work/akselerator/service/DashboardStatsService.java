@@ -6,4 +6,6 @@ import java.time.Year;
 
 public interface DashboardStatsService {
     DashboardCardsDto getCardsStats(Year year);
+
+    DashboardCardsDto getCardsStatsAllTime();
 }

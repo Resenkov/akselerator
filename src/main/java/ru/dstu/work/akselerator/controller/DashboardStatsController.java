@@ -25,4 +25,10 @@ public class DashboardStatsController {
         DashboardCardsDto stats = dashboardStatsService.getCardsStats(year);
         return ResponseEntity.ok(stats);
     }
+
+    @GetMapping("/cards/all")
+    public ResponseEntity<DashboardCardsDto> getAllTimeCardsStats() {
+        DashboardCardsDto stats = dashboardStatsService.getCardsStatsAllTime();
+        return ResponseEntity.ok(stats);
+    }
 }

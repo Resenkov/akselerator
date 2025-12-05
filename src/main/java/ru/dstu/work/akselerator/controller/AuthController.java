@@ -211,6 +211,11 @@ public class AuthController {
                     .body(Map.of("valid", false, "expired", false, "error", "invalid_token"));
         }
 
+        if (expired) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("valid", false, "expired", true, "error", "token_expired"));
+        }
+
         String username = claims.getSubject();
         List<String> roles = tokenProvider.getRoles(claims);
 

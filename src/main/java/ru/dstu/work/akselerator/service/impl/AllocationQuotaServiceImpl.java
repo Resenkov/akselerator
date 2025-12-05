@@ -96,6 +96,14 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
                 q.getPeriodStart(),
                 q.getPeriodEnd()
         );
+        if (used == null || used.compareTo(BigDecimal.ZERO) == 0) {
+            used = catchReportRepository.sumWeightBySpeciesRegionForOrg(
+                    q.getSpecies().getId(),
+                    q.getRegion().getId(),
+                    q.getOrganization().getId()
+            );
+        }
+
         return used != null ? used : BigDecimal.ZERO;
     }
 
@@ -220,6 +228,14 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
                                 q.getPeriodStart(),
                                 q.getPeriodEnd()
                         );
+
+                        if (used == null || used.compareTo(BigDecimal.ZERO) == 0) {
+                            used = catchReportRepository.sumWeightBySpeciesRegionForOrg(
+                                    q.getSpecies().getId(),
+                                    q.getRegion().getId(),
+                                    q.getOrganization().getId()
+                            );
+                        }
                     }
                     if (used == null) used = BigDecimal.ZERO;
                     dto.setUsedKg(used);
