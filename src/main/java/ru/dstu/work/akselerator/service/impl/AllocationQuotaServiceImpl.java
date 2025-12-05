@@ -62,8 +62,17 @@ public class AllocationQuotaServiceImpl implements AllocationQuotaService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AllocationQuotaDto> listDtosWithUsage(Pageable pageable) {
-        Page<AllocationQuota> page = repository.findAll(pageable);
+    public Page<AllocationQuotaDto> listDtosWithUsage(Integer year, Pageable pageable) {
+        Page<AllocationQuota> page;
+
+        if (year == null) {
+            page = repository.findAll(pageable);
+        } else {
+            LocalDate start = LocalDate.of(year, 1, 1);
+            LocalDate end = LocalDate.of(year, 12, 31);
+            page = repository.findByYear(start, end, pageable);
+        }
+
         return page.map(this::enrichDtoWithUsage);
     }
 

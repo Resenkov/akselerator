@@ -46,14 +46,16 @@ public class AllocationQuotaController {
      * Получить постраничный список всех мини-квот.
      *
      * Пример вызова:
-     * GET /api/allocation-quotas?page=0&size=20
+     * GET /api/allocation-quotas?page=0&size=20&year=2024
      *
+     * @param year     год, по которому фильтруются квоты (опционально)
      * @param pageable параметры постраничной выборки (страница, размер, сортировка)
      * @return страница с DTO мини-квот
      */
     @GetMapping
-    public ResponseEntity<Page<AllocationQuotaDto>> list(Pageable pageable) {
-        Page<AllocationQuotaDto> dtoPage = service.listDtosWithUsage(pageable);
+    public ResponseEntity<Page<AllocationQuotaDto>> list(@RequestParam(value = "year", required = false) Integer year,
+                                                         Pageable pageable) {
+        Page<AllocationQuotaDto> dtoPage = service.listDtosWithUsage(year, pageable);
         return ResponseEntity.ok(dtoPage);
     }
 
