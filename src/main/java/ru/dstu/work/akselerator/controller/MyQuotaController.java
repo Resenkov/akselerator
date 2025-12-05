@@ -80,13 +80,8 @@ public class MyQuotaController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/allocation")
     public ResponseEntity<AllocationQuotaDto> createForMyOrganization(@RequestBody AllocationQuotaDto dto) {
-        User current = getCurrentUser();
-        if (current.getOrganization() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
 
         AllocationQuota entity = AllocationQuotaMapper.toEntity(dto);
-        entity.setOrganization(current.getOrganization());
 
         AllocationQuota saved = allocationQuotaService.create(entity);
 
