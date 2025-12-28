@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>SmartPark | Кабинет</title>
+    <link rel="stylesheet" href="/css/app.css"/>
+</head>
+<body>
+<main class="container">
+    <header class="page-header">
+        <h1>SmartPark</h1>
+        <p>Личный кабинет</p>
+        <button class="secondary" id="logout">Выйти</button>
+    </header>
+
+    <section class="card">
+        <h2>Текущий токен</h2>
+        <pre class="code-block" id="token-display">Токен не найден</pre>
+    </section>
+
+    <section class="card">
+        <h2>Запрос к сервису бронирования</h2>
+        <form id="booking-form" class="form">
+            <label>
+                URL бронирования
+                <input type="text" name="endpoint" value="/api/core/reservations"/>
+            </label>
+            <label>
+                JSON тела запроса
+                <textarea name="payload" rows="6">{"parkingSpotId":1,"from":"2025-01-01T10:00:00","to":"2025-01-01T11:00:00"}</textarea>
+            </label>
+            <button type="submit">Отправить запрос</button>
+        </form>
+        <pre class="code-block" id="booking-response"></pre>
+    </section>
+</main>
+
+<script src="/js/app.js"></script>
+<script>
+    SmartParkAuth.bindDashboard();
+</script>
+</body>
+</html>
