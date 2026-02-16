@@ -1,5 +1,7 @@
 version: '3.8'
+
 services:
+  # База данных PostgreSQL
   acselerator-db:
     image: postgres:16-alpine
     container_name: acselerator-db
@@ -9,14 +11,17 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
       POSTGRES_PASSWORD: 2611
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  # Spring Boot бэкенд
   acselerator-app:
-    build: .
+    build: ./  # Путь к папке с бэкендом
     container_name: acselerator-app
     ports:
       - "8080:8080"
@@ -27,3 +32,19 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://acselerator-db:5432/postgres
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 2611
+      SPRING_PROFILES_ACTIVE: docker
+
+  # React фронтенд
+  acselerator-frontend:
+    build: ./accelerator-front2-master  # Путь к папке с фронтендом
+    container_name: acselerator-frontend
+    ports:
+      - "3000:80"  # Хост:3000 → контейнер:80
+    depends_on:
+      - acselerator-app
+    environment:
+      - NODE_ENV=production
+      - VITE_API_BASE_URL=/api  # Для использования прокси
+
+volumes:
+  postgres_data:
